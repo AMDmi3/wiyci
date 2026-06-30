@@ -4,8 +4,12 @@
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE projects (
-    name       TEXT NOT NULL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    name            TEXT NOT NULL PRIMARY KEY,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+	num_tasks		INTEGER NOT NULL DEFAULT 0,
+	next_update_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+	last_updated_at TIMESTAMPTZ
 );
 
 CREATE INDEX projects_name_trgm ON projects USING gin (name gin_trgm_ops);
+CREATE INDEX projects_queue_idx ON projects(next_update_at, name);

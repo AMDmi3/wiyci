@@ -2,5 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 mod discover;
+mod update;
 
 pub use discover::*;
+pub use update::*;

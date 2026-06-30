@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::time::Duration;
+
 use indoc::indoc;
 use sqlx::PgPool;
 
@@ -18,6 +20,28 @@ pub async fn create(pool: &PgPool, name: &str) -> sqlx::Result<()> {
     Ok(())
 }
 
+pub async fn register_update(
+    pool: &PgPool,
+    name: &str,
+    num_tasks: u32,
+    to_next_update: Duration,
+) -> sqlx::Result<()> {
+    sqlx::query(indoc! {"
+        UPDATE projects
+           SET last_updated_at = now(),
+               num_tasks = $2,
+               next_update_at = now() + $3
+         WHERE name = $1
+    "})
+    .bind(name)
+    .bind(num_tasks as i32)
+    .bind(to_next_update)
+    .bind(name)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 pub async fn get_by_name(pool: &PgPool, name: &str) -> sqlx::Result<Option<Project>> {
     let project = sqlx::query_as(indoc! {"
         SELECT *
@@ -25,6 +49,19 @@ pub async fn get_by_name(pool: &PgPool, name: &str) -> sqlx::Result<Option<Proje
          WHERE name = $1
     "})
     .bind(name)
+    .fetch_optional(pool)
+    .await?;
+    Ok(project)
+}
+
+pub async fn get_next_for_update(pool: &PgPool) -> sqlx::Result<Option<Project>> {
+    let project = sqlx::query_as(indoc! {"
+          SELECT *
+            FROM projects
+           WHERE next_update_at < now()
+        ORDER BY next_update_at, name
+           LIMIT 1
+    "})
     .fetch_optional(pool)
     .await?;
     Ok(project)

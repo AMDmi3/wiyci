@@ -8,4 +8,8 @@ use time::OffsetDateTime;
 pub struct Project {
     pub name: String,
     pub created_at: OffsetDateTime,
+    #[sqlx(try_from = "i32")]
+    pub num_tasks: u32,
+    pub next_update_at: OffsetDateTime,
+    pub last_updated_at: Option<OffsetDateTime>,
 }

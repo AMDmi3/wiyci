@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#![feature(duration_constructors)]
+
 mod config;
 mod init;
 mod workers;
@@ -37,7 +39,8 @@ async fn main() -> anyhow::Result<()> {
 
     info!("running workers");
     let discover = workers::DiscoverProjectsWorker::new(pool.clone());
-    tokio::try_join!(discover.run(),).context("worker finished with error")?;
+    let update = workers::UpdateProjectsWorker::new(pool.clone());
+    tokio::try_join!(discover.run(), update.run(),).context("worker finished with error")?;
 
     Ok(())
 }
