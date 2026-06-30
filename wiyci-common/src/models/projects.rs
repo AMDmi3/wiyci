@@ -5,8 +5,7 @@ use sqlx::FromRow;
 use time::OffsetDateTime;
 
 #[derive(FromRow)]
-pub struct Item {
-    pub id: i32,
-    pub text: String,
-    pub time: OffsetDateTime,
+pub struct Project {
+    pub name: String,
+    pub created_at: OffsetDateTime,
 }

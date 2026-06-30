@@ -897,76 +897,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
-name = "wiyci-common"
-version = "0.1.0"
-dependencies = [
- "indoc",
- "sqlx",
- "time",
-]
-
-[[package]]
-name = "wiyci-daemon"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "wiyci-common",
- "indoc",
- "metrics",
- "metrics-exporter-prometheus",
- "metrics-process",
- "rand 0.10.1",
- "serde",
- "sqlx",
- "time",
- "tokio",
- "toml",
- "tracing",
- "tracing-appender",
- "tracing-loki",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
-name = "wiyci-web"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "askama",
- "automod",
- "axum",
- "axum-myroutes",
- "axum-test",
- "cityhasher",
- "clap",
- "flate2",
- "wiyci-common",
- "include_dir",
- "indexmap",
- "indoc",
- "insta",
- "metrics",
- "metrics-exporter-prometheus",
- "metrics-process",
- "mime",
- "serde",
- "sqlx",
- "tidier",
- "time",
- "tokio",
- "toml",
- "tower-cookies",
- "tracing",
- "tracing-appender",
- "tracing-loki",
- "tracing-subscriber",
- "url",
- "url-escape",
-]
-
-[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3983,6 +3913,76 @@ dependencies = [
  "serde_json",
  "unicode-xid",
  "wasmparser",
+]
+
+[[package]]
+name = "wiyci-common"
+version = "0.1.0"
+dependencies = [
+ "indoc",
+ "sqlx",
+ "time",
+]
+
+[[package]]
+name = "wiyci-daemon"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "indoc",
+ "metrics",
+ "metrics-exporter-prometheus",
+ "metrics-process",
+ "rand 0.10.1",
+ "serde",
+ "sqlx",
+ "time",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-appender",
+ "tracing-loki",
+ "tracing-subscriber",
+ "url",
+ "wiyci-common",
+]
+
+[[package]]
+name = "wiyci-web"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "askama",
+ "automod",
+ "axum",
+ "axum-myroutes",
+ "axum-test",
+ "cityhasher",
+ "clap",
+ "flate2",
+ "include_dir",
+ "indexmap",
+ "indoc",
+ "insta",
+ "metrics",
+ "metrics-exporter-prometheus",
+ "metrics-process",
+ "mime",
+ "serde",
+ "sqlx",
+ "tidier",
+ "time",
+ "tokio",
+ "toml",
+ "tower-cookies",
+ "tracing",
+ "tracing-appender",
+ "tracing-loki",
+ "tracing-subscriber",
+ "url",
+ "url-escape",
+ "wiyci-common",
 ]
 
 [[package]]

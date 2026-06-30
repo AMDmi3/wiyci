@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+{% block title %}Project {{ project.name }} - {{ super() }}{% endblock %}
+{% block header %}Project {{ project.name }}{% endblock %}
+{% block content %}
+
+<ul>
+	<li><strong>Created at:</strong> {{ project.created_at.format(time::macros::format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).unwrap() }}</li>
+</ul>
+
+{% endblock content %}

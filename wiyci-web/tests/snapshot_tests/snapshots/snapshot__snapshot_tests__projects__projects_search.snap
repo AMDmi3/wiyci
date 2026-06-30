@@ -1,20 +1,20 @@
 ---
-source: wiyci-web/tests/snapshot_tests/about.rs
-expression: "server.get(\"/about\").await"
+source: wiyci-web/tests/snapshot_tests/projects.rs
+expression: "server.get(\"/projects?search=irefo\").await"
 ---
 HTTP/1.1 200 OK
 content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1213
+content-length: 1209
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>About - wiyci</title>
+	<title>Projects - wiyci</title>
 	<link rel="stylesheet" href="/static/amdmi3.min.f3478182ea6d23a3.css">
 </head>
 <body>
@@ -25,18 +25,24 @@ content-length: 1213
 		<a href="/"><strong title="World Is Your CI">wiyci</strong></a>
 	</div>
 	<ul class="navbar-menu">
-		<li class="navbar-item"><a href="/projects">Projects</a></li>
-		<li class="navbar-item is-active"><a href="/about" aria-current="true">About</a></li>
+		<li class="navbar-item is-active"><a href="/projects" aria-current="true">Projects</a></li>
+		<li class="navbar-item"><a href="/about">About</a></li>
 	</ul>
 </nav>
 </div></header>
 
 <main class="main"><div class="container">
 
-<h1>About</h1>
+<h1>Projects</h1>
 
 
-<p>This is an example about page. Look for docs in the projects' repository</p>
+
+<ul>
+	<li>
+		<a href="/project/firefox">firefox</a>
+    </li>
+</ul>
+
 
 
 </div></main>

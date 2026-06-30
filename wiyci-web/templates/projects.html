@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% block title %}Projects - {{ super() }}{% endblock %}
+{% block header %}Projects{% endblock %}
+{% block content %}
+
+{% if projects.is_empty() %}
+<p>No projects found</p>
+{% else %}
+<ul>
+	<li>
+		{%- for project in projects %}
+		<a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a>
+        {%- endfor %}
+    </li>
+</ul>
+{% endif %}
+
+{% endblock content %}

@@ -12,7 +12,8 @@ use crate::state::AppState;
 pub enum Section {
     #[default]
     Undefined,
-    Items,
+    Root,
+    Projects,
     Docs,
 }
 
@@ -36,10 +37,12 @@ impl RouteProps {
 pub enum Route {
     #[get("/static/{file_name}", handler = handlers::static_file)]
     StaticFile,
-    #[get("/", handler = handlers::root, props = RouteProps::default().section(Section::Items) )]
+    #[get("/", handler = handlers::root, props = RouteProps::default().section(Section::Root) )]
     Root,
-    #[get("/item/{id}", handler = handlers::item, props = RouteProps::default().section(Section::Items) )]
-    Item,
+    #[get("/project/{name}", handler = handlers::project, props = RouteProps::default().section(Section::Projects) )]
+    Project,
+    #[get("/projects", handler = handlers::projects, props = RouteProps::default().section(Section::Projects) )]
+    Projects,
     #[get("/about", handler = handlers::about, props = RouteProps::default().section(Section::Docs) )]
     About,
 }

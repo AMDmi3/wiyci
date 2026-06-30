@@ -1,10 +1,9 @@
-# wiyci
+# World Is Your CI
 
 [![CI](https://github.com/AMDmi3/wiyci/actions/workflows/ci.yml/badge.svg)](https://github.com/AMDmi3/wiyci/actions/workflows/ci.yml)
 
-A template for rust project consisting of a website backend and update
-daemon, connected through a PostgreSQL database. Suitable for building
-services like [Repology](https://github.com/repology/repology-rs).
+A web service which aggregates build logs of F/OSS projects and serves
+as an impromptu CI, reporting build failures, warnings, and failed tests.
 
 ## Requirements
 

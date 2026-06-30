@@ -6,7 +6,7 @@ use sqlx::PgPool;
 
 use wiyci_web::create_app;
 
-#[sqlx::test(migrator = "wiyci_common::MIGRATOR", fixtures("sample_items"))]
+#[sqlx::test(migrator = "wiyci_common::MIGRATOR")]
 async fn test_root(pool: PgPool) {
     let server = TestServer::new(create_app(pool).await.unwrap());
     insta::assert_snapshot!(server.get("/").await);

@@ -9,7 +9,6 @@ workspace = true
 [dependencies]
 anyhow = "1.0.102"
 clap = { version = "4.6.1", features = ["derive"] }
-wiyci-common = { path = "../wiyci-common" }
 indoc = "2.0.7"
 metrics = "0.24.6"
 metrics-exporter-prometheus = { version = "0.18.3", features = ["http-listener"] }
@@ -25,3 +24,4 @@ tracing-appender = "0.2.5"
 tracing-loki = { version = "0.2.7", features = ["compat-0-2-1"] }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "time"] }
 url = { version = "2.5.8", features = ["serde"] }
+wiyci-common = { path = "../wiyci-common" }

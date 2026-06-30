@@ -4,6 +4,7 @@
 #![cfg_attr(test, feature(coverage_attribute))]
 
 pub mod config;
+mod constants;
 mod handlers;
 mod middleware;
 mod result;

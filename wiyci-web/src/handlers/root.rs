@@ -7,9 +7,6 @@ use askama::Template;
 use axum::extract::State;
 use axum::response::{Html, IntoResponse};
 
-use wiyci_common::db::items;
-use wiyci_common::models::items::Item;
-
 use crate::result::HandlerResult;
 use crate::routes::MyRoute;
 use crate::state::AppState;
@@ -18,17 +15,16 @@ use crate::state::AppState;
 #[template(path = "root.html")]
 struct TemplateParams<'a> {
     my_route: &'a MyRoute,
-    items: &'a [Item],
 }
 
 #[cfg_attr(not(coverage), tracing::instrument(skip_all))]
-pub async fn root(my_route: MyRoute, State(state): State<Arc<AppState>>) -> HandlerResult {
-    let items = items::get_all(&state.pool).await?;
-
+pub async fn root(
+    my_route: MyRoute,
+    State(_state /* XXX: will be used */): State<Arc<AppState>>,
+) -> HandlerResult {
     Ok(Html(
         TemplateParams {
             my_route: &my_route,
-            items: &items,
         }
         .render()?,
     )
