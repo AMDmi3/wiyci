@@ -1,0 +1,36 @@
+name: Latest dependencies
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+jobs:
+  test:
+    env:
+      POSTGRESQL: 18
+      RUSTFLAGS: -Dwarnings
+      CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: allow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-05-27
+      - name: Set up PostgreSQL
+        run: |
+          sudo systemctl stop postgresql
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt install postgresql-$POSTGRESQL
+          sudo pg_createcluster $POSTGRESQL main
+          sudo sed -i -e 's|5433|5432|' /etc/postgresql/$POSTGRESQL/main/postgresql.conf
+          sudo sed -i -e '/^local/ s|peer|trust|' /etc/postgresql/$POSTGRESQL/main/pg_hba.conf
+          sudo pg_ctlcluster $POSTGRESQL main start
+      - name: Init the database
+        run: |
+          psql --username postgres -c "CREATE DATABASE wiyci"
+          psql --username postgres -c "CREATE USER wiyci WITH PASSWORD 'wiyci'"
+          psql --username postgres -c "GRANT ALL ON DATABASE wiyci TO wiyci"
+      - name: Update dependencies
+        run: cargo update
+      - name: Test
+        run: cargo test
+        env:
+          DATABASE_URL: postgres:///?user=postgres

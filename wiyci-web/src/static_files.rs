@@ -1,0 +1,130 @@
+// SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+use std::collections::HashMap;
+use std::sync::LazyLock;
+
+use anyhow::anyhow;
+use axum::body::Bytes;
+use flate2::{Compression, write::GzEncoder};
+use include_dir::{Dir, DirEntry, include_dir};
+use tracing::info;
+
+static STATIC_FILES_RAW: Dir = include_dir!("$CARGO_MANIFEST_DIR/static");
+
+pub static STATIC_FILES: LazyLock<StaticFiles> =
+    LazyLock::new(|| StaticFiles::new(&STATIC_FILES_RAW));
+
+pub struct StaticFile {
+    pub name: &'static str,
+    pub hashed_name: String,
+    pub original_content: &'static [u8],
+    pub compressed_content: Bytes,
+}
+
+pub struct StaticFiles {
+    files: Vec<StaticFile>,
+    // TODO: sobjugate self-referential structures and convert to HashMap<&str, &StaticFile>
+    by_hashed_name: HashMap<String, usize>,
+    by_orig_name: HashMap<String, usize>,
+}
+
+impl StaticFiles {
+    pub fn new(dir: &'static Dir) -> Self {
+        let static_files_iterator = dir
+            .find("**/*")
+            .expect("file glob should be valid")
+            .filter_map(|entry| {
+                if let DirEntry::File(file) = entry {
+                    Some((
+                        file.path()
+                            .to_str()
+                            .expect("static file names should be utf8"),
+                        file.contents(),
+                    ))
+                } else {
+                    None
+                }
+            });
+
+        let files: Vec<_> = static_files_iterator
+            .map(|(name, original_content)| {
+                let compressed_content = {
+                    use std::io::Write;
+                    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+                    encoder
+                        .write_all(original_content)
+                        .expect("compression into memory is not expected to fail");
+                    encoder
+                        .finish()
+                        .expect("compression into memory is not expected to fail")
+                };
+                let hash: u64 = cityhasher::hash(original_content);
+                let (base, ext) = name
+                    .rsplit_once('.')
+                    .expect("static files should have extensions");
+                let hashed_name = format!("{base}.{hash:016x}.{ext}");
+
+                info!(
+                    orig_name = name,
+                    hashed_name = hashed_name,
+                    orig_size = original_content.len(),
+                    compressed_size = compressed_content.len(),
+                    "adding static file"
+                );
+
+                StaticFile {
+                    name,
+                    hashed_name,
+                    original_content,
+                    compressed_content: compressed_content.into(),
+                }
+            })
+            .collect();
+
+        Self {
+            by_hashed_name: files
+                .iter()
+                .enumerate()
+                .map(|(i, file)| (file.hashed_name.clone(), i))
+                .collect(),
+            by_orig_name: files
+                .iter()
+                .enumerate()
+                .map(|(i, file)| (file.name.to_string(), i))
+                .collect(),
+            files,
+        }
+    }
+
+    pub fn by_hashed_name(&self, hashed_name: &str) -> Option<&StaticFile> {
+        self.by_hashed_name
+            .get(hashed_name)
+            .map(|i| &self.files[*i])
+    }
+
+    pub fn by_orig_name(&self, orig_name: &str) -> Option<&StaticFile> {
+        self.by_orig_name.get(orig_name).map(|i| &self.files[*i])
+    }
+}
+
+pub fn url_for_static(file_name: &str) -> anyhow::Result<String> {
+    let file = STATIC_FILES
+        .by_orig_name(file_name)
+        .ok_or_else(|| anyhow!("unknown static file \"{}\"", file_name))?;
+
+    Ok(crate::routes::Route::StaticFile
+        .url_for()
+        .path_param("file_name", &file.hashed_name)
+        .expect("file_name parameter should exist for StaticFile route")
+        .build()?)
+}
+
+#[allow(unused)]
+pub fn url_for_unversioned_static(file_name: &str) -> anyhow::Result<String> {
+    Ok(crate::routes::Route::StaticFile
+        .url_for()
+        .path_param("file_name", file_name)
+        .expect("file_name parameter should exist for StaticFile route")
+        .build()?)
+}

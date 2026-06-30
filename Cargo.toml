@@ -1,0 +1,10 @@
+[workspace]
+members = ["wiyci-web", "wiyci-daemon", "wiyci-common"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.98"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }
