@@ -3,7 +3,9 @@
 
 use std::time::Duration;
 
+use metrics::histogram;
 use sqlx::PgPool;
+use time::OffsetDateTime;
 use tracing::{error, info};
 
 use wiyci_common::db;
@@ -28,7 +30,13 @@ impl UpdateProjectsWorker {
             return Ok(false);
         };
 
-        info!(project.name, "updating project");
+        let overdue_seconds = (OffsetDateTime::now_utc() - project.next_update_at)
+            .as_seconds_f64()
+            .max(0.0);
+
+        info!(project.name, overdue_seconds, "updating project");
+
+        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
 
         let num_tasks: usize = 0;
         let update_period = if num_tasks == 0 {

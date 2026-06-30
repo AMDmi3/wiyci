@@ -121,9 +121,36 @@ pub fn init_logging(config: &Config) -> anyhow::Result<()> {
 pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
     if let Some(socket_addr) = &config.prometheus_export {
         info!("initializing prometheus exporter");
-        use metrics_exporter_prometheus::PrometheusBuilder;
+        use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
+
+        const MINUTE_TO_YEAR_SECONDS_BUCKETS: &[f64] = &[
+            60.0,
+            120.0,
+            300.0,
+            600.0,
+            1200.0,
+            1.0 * 3600.0,
+            2.0 * 3600.0,
+            4.0 * 3600.0,
+            8.0 * 3600.0,
+            1.0 * 86400.0,
+            2.0 * 86400.0,
+            4.0 * 86400.0,
+            7.0 * 86400.0,
+            14.0 * 86400.0,
+            30.0 * 86400.0,
+            61.0 * 86400.0,
+            120.0 * 86400.0,
+            183.0 * 86400.0,
+            366.0 * 86400.0,
+        ];
 
         PrometheusBuilder::new()
+            .set_buckets_for_metric(
+                Matcher::Suffix("_overdue_age_seconds".to_string()),
+                MINUTE_TO_YEAR_SECONDS_BUCKETS,
+            )
+            .unwrap()
             .with_http_listener(*socket_addr)
             .install()
             .context("prometheus exporter initialization failed")?;
