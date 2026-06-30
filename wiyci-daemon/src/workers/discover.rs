@@ -17,6 +17,10 @@ impl DiscoverProjectsWorker {
         Self { pool }
     }
 
+    #[cfg_attr(
+        not(coverage),
+        tracing::instrument(name = "DiscoverProjectsWorker", skip_all)
+    )]
     pub async fn run(&self) -> anyhow::Result<()> {
         for project in DEFAULT_PROJECTS {
             info!("adding default project {}", project);
