@@ -123,6 +123,11 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
         info!("initializing prometheus exporter");
         use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 
+        const MILLI_TO_10MIN_SECONDS_BUCKETS: &[f64] = &[
+            0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 20.0,
+            40.0, 60.0, 90.0, 120.0, 180.0, 300.0, 600.0,
+        ];
+
         const MINUTE_TO_YEAR_SECONDS_BUCKETS: &[f64] = &[
             60.0,
             120.0,
@@ -146,6 +151,11 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
         ];
 
         PrometheusBuilder::new()
+            .set_buckets_for_metric(
+                Matcher::Suffix("_duration_seconds".to_string()),
+                MILLI_TO_10MIN_SECONDS_BUCKETS,
+            )
+            .unwrap()
             .set_buckets_for_metric(
                 Matcher::Suffix("_overdue_age_seconds".to_string()),
                 MINUTE_TO_YEAR_SECONDS_BUCKETS,

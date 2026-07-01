@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use metrics::histogram;
+use metrics::{counter, histogram};
 use sqlx::PgPool;
 use time::OffsetDateTime;
 use tracing::{error, info};
@@ -26,6 +26,8 @@ impl UpdateProjectsWorker {
     }
 
     async fn update_next_project(&self) -> anyhow::Result<bool> {
+        let start = Instant::now();
+
         let Some(project) = db::projects::get_next_for_update(&self.pool).await? else {
             return Ok(false);
         };
@@ -35,7 +37,6 @@ impl UpdateProjectsWorker {
             .max(0.0);
 
         info!(project.name, overdue_seconds, "updating project");
-
         histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
 
         let num_tasks: usize = 0;
@@ -46,6 +47,17 @@ impl UpdateProjectsWorker {
         };
 
         db::projects::register_update(&self.pool, &project.name, 0, update_period).await?;
+
+        let check_duration_seconds = Instant::now()
+            .saturating_duration_since(start)
+            .as_secs_f64();
+
+        info!(
+            project.name,
+            check_duration_seconds, num_tasks, "project updated"
+        );
+        histogram!("wiyci_daemon_project_update_duration_seconds").record(check_duration_seconds);
+        counter!("wiyci_daemon_project_updates_total", "type" => if num_tasks > 0 { "active" } else { "inactive" }).increment(1);
 
         Ok(true)
     }
