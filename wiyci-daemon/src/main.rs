@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #![feature(duration_constructors)]
+#![cfg_attr(test, feature(coverage_attribute))]
 
 mod config;
 mod init;
+mod storage;
 mod workers;
 
 use anyhow::Context as _;
@@ -26,6 +28,8 @@ async fn main() -> anyhow::Result<()> {
 
     let client = init_http_client(&config).with_context(|| "failed to init HTTP client")?;
 
+    let storage = storage::LogStorage::new(&config.storage_path);
+
     if !config.skip_migrations {
         info!("running migrations");
 
@@ -43,7 +47,9 @@ async fn main() -> anyhow::Result<()> {
     info!("running workers");
     let discover = workers::DiscoverProjectsWorker::new(pool.clone());
     let update = workers::UpdateProjectsWorker::new(pool.clone(), client.clone());
-    tokio::try_join!(discover.run(), update.run(),).context("worker finished with error")?;
+    let fetch = workers::FetchLogsWorker::new(pool.clone(), client.clone(), storage.clone());
+    tokio::try_join!(discover.run(), update.run(), fetch.run())
+        .context("worker finished with error")?;
 
     Ok(())
 }

@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use clap::Parser;
 use serde::Deserialize;
 use url::Url;
@@ -68,6 +68,10 @@ pub struct CliArgs {
     /// Default: 3 seconds
     #[arg(long)]
     http_delay: Option<f64>,
+
+    /// Storage for downloaded build logs
+    #[arg(long)]
+    storage_path: Option<PathBuf>,
 }
 
 #[derive(Deserialize, Default)]
@@ -82,6 +86,7 @@ struct FileConfig {
     frontend_hostname: Option<String>,
     http_timeout: Option<f64>,
     http_delay: Option<f64>,
+    storage_path: Option<PathBuf>,
 }
 
 #[derive(Debug)]
@@ -94,6 +99,7 @@ pub struct Config {
     pub frontend_hostname: Option<String>,
     pub http_timeout: Duration,
     pub http_delay: Duration,
+    pub storage_path: PathBuf,
 }
 
 impl Config {
@@ -136,6 +142,9 @@ impl Config {
                 .or(config.http_delay)
                 .map(Duration::from_secs_f64)
                 .unwrap_or(DEFAULT_HTTP_DELAY),
+            storage_path: args.storage_path.or(config.storage_path).ok_or_else(|| {
+                anyhow!("missing required argument or config paramater \"storage-path\"")
+            })?,
         })
     }
 }

@@ -11,8 +11,9 @@ use crate::models::projects::Project;
 pub async fn create(pool: &PgPool, name: &str) -> sqlx::Result<()> {
     sqlx::query(indoc! {"
         INSERT INTO projects(name)
-        VALUES($1)
-        ON CONFLICT(name) DO NOTHING
+             VALUES ($1)
+        ON CONFLICT (name)
+         DO NOTHING
     "})
     .bind(name)
     .execute(pool)
@@ -24,19 +25,18 @@ pub async fn register_update(
     pool: &PgPool,
     name: &str,
     num_tasks: u32,
-    to_next_update: Duration,
+    update_period: Duration,
 ) -> sqlx::Result<()> {
     sqlx::query(indoc! {"
         UPDATE projects
-           SET last_updated_at = now(),
-               num_tasks = $2,
-               next_update_at = now() + $3
+           SET last_updated_at = now()
+             , num_tasks = $2
+             , next_update_at = now() + $3
          WHERE name = $1
     "})
     .bind(name)
     .bind(num_tasks as i32)
-    .bind(to_next_update)
-    .bind(name)
+    .bind(update_period)
     .execute(pool)
     .await?;
     Ok(())

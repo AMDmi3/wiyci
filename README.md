@@ -26,7 +26,7 @@ This code requires latest Rust-nightly.
    (note that you DSN may vary depending on postgresql settings)
 
    ```
-   cargo run --bin wiyci-daemon -- --dsn postgresql://wiyci:wiyci@localhost/wiyci
+   cargo run --bin wiyci-daemon -- --dsn postgresql://wiyci:wiyci@localhost/wiyci --storage-path /tmp/wiyci-logs
    ```
 
 3. Run the webapp
