@@ -8,10 +8,11 @@ mod init;
 mod workers;
 
 use anyhow::Context as _;
+use reqwest_middleware::ClientWithMiddleware as HttpClient;
 use tracing::info;
 
 use crate::config::Config;
-use crate::init::{init_database, init_logging, init_metrics};
+use crate::init::{init_database, init_http_client, init_logging, init_metrics};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,6 +23,8 @@ async fn main() -> anyhow::Result<()> {
     let pool = init_database(&config)
         .await
         .with_context(|| "failed to init database")?;
+
+    let client = init_http_client(&config).with_context(|| "failed to init HTTP client")?;
 
     if !config.skip_migrations {
         info!("running migrations");
@@ -39,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("running workers");
     let discover = workers::DiscoverProjectsWorker::new(pool.clone());
-    let update = workers::UpdateProjectsWorker::new(pool.clone());
+    let update = workers::UpdateProjectsWorker::new(pool.clone(), client.clone());
     tokio::try_join!(discover.run(), update.run(),).context("worker finished with error")?;
 
     Ok(())

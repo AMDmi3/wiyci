@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::borrow::Cow;
+
 use anyhow::Context as _;
 use metrics::{counter, gauge};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Executor, PgPool};
 use tracing::{info, warn};
 
+use crate::HttpClient;
 use crate::config::Config;
 
 #[allow(unexpected_cfgs)]
@@ -195,4 +198,25 @@ pub async fn init_database(config: &Config) -> anyhow::Result<PgPool> {
         .context("error creating PostgreSQL connection pool")?;
 
     Ok(pool)
+}
+
+pub fn init_http_client(config: &Config) -> anyhow::Result<HttpClient> {
+    const USER_AGENT: &str = "wiyci/1";
+    let user_agent = if let Some(frontend_hostname) = &config.frontend_hostname {
+        Cow::from(format!("{} (+{})", USER_AGENT, frontend_hostname))
+    } else {
+        Cow::from(USER_AGENT)
+    };
+
+    let client = reqwest::Client::builder()
+        .user_agent(user_agent.as_ref())
+        .timeout(config.http_timeout)
+        .build()
+        .with_context(|| "failed to init http client")?;
+    let politeness = reqwest_politeness::ReqwestPoliteness::default().with_delay(config.http_delay);
+    let client = reqwest_middleware::ClientBuilder::new(client)
+        .with(politeness)
+        .build();
+
+    Ok(client)
 }

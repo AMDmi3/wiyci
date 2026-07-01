@@ -3,6 +3,7 @@
 
 #![cfg_attr(test, feature(coverage_attribute))]
 
+pub mod api;
 pub mod db;
 pub mod migrations;
 pub mod models;

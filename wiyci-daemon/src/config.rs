@@ -3,6 +3,7 @@
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use anyhow::Context;
 use clap::Parser;
@@ -10,6 +11,8 @@ use serde::Deserialize;
 use url::Url;
 
 const DEFAULT_DSN: &str = "postgresql://wiyci@localhost/wiyci";
+const DEFAULT_HTTP_TIMEOUT: Duration = Duration::from_secs(60);
+const DEFAULT_HTTP_DELAY: Duration = Duration::from_secs(3);
 
 // Note: do not use default values for args which are also present in
 // FileConfig, otherwise config settings will always be overwritten
@@ -47,6 +50,24 @@ pub struct CliArgs {
     /// Socket address for serving Prometheus metrics
     #[arg(long, value_name = "ADDR:PORT")]
     prometheus_export: Option<SocketAddr>,
+
+    /// Frontend hostname
+    ///
+    /// This is used in HTTP User-Agent header submitted by the daemon
+    #[arg(long, value_name = "HOST")]
+    frontend_hostname: Option<String>,
+
+    /// Timeout for HTTP requests
+    ///
+    /// Default: 60 seconds
+    #[arg(long)]
+    http_timeout: Option<f64>,
+
+    /// Delay between HTTP requests to the same host
+    ///
+    /// Default: 3 seconds
+    #[arg(long)]
+    http_delay: Option<f64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -58,6 +79,9 @@ struct FileConfig {
     loki_url: Option<Url>,
     prometheus_export: Option<SocketAddr>,
     skip_migrations: bool,
+    frontend_hostname: Option<String>,
+    http_timeout: Option<f64>,
+    http_delay: Option<f64>,
 }
 
 #[derive(Debug)]
@@ -67,6 +91,9 @@ pub struct Config {
     pub loki_url: Option<Url>,
     pub prometheus_export: Option<SocketAddr>,
     pub skip_migrations: bool,
+    pub frontend_hostname: Option<String>,
+    pub http_timeout: Duration,
+    pub http_delay: Duration,
 }
 
 impl Config {
@@ -99,6 +126,21 @@ impl Config {
             loki_url: args.loki_url.or(config.loki_url),
             prometheus_export: args.prometheus_export.or(config.prometheus_export),
             skip_migrations: args.skip_migrations || config.skip_migrations,
+            frontend_hostname: args
+                .frontend_hostname
+                .as_deref()
+                .or(config.frontend_hostname.as_deref())
+                .map(|host| host.trim_end_matches('/').to_string()),
+            http_timeout: args
+                .http_timeout
+                .or(config.http_timeout)
+                .map(Duration::from_secs_f64)
+                .unwrap_or(DEFAULT_HTTP_TIMEOUT),
+            http_delay: args
+                .http_delay
+                .or(config.http_delay)
+                .map(Duration::from_secs_f64)
+                .unwrap_or(DEFAULT_HTTP_DELAY),
         })
     }
 }

@@ -9,5 +9,7 @@ workspace = true
 
 [dependencies]
 indoc = "2.0.7"
+reqwest = { version = "0.13.4", default-features = false, features = ["json"] }
+serde = { version = "1.0.228", features = ["derive"] }
 sqlx = { version = "0.9.0", default-features = false, features = ["macros", "migrate", "postgres", "time"] }
 time = "0.3.51"

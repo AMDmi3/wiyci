@@ -8,7 +8,11 @@ use sqlx::PgPool;
 use time::OffsetDateTime;
 use tracing::{error, info};
 
+use wiyci_common::api;
 use wiyci_common::db;
+use wiyci_common::models::repology::RepologyPackage;
+
+use crate::HttpClient;
 
 const RETRY_INTERVAL: Duration = Duration::from_mins(1);
 const ITERATION_INTERVAL: Duration = Duration::from_mins(1);
@@ -18,11 +22,16 @@ const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
 
 pub struct UpdateProjectsWorker {
     pool: PgPool,
+    client: HttpClient,
+}
+
+fn generate_tasks(_packages: &[RepologyPackage]) -> Vec<()> {
+    vec![]
 }
 
 impl UpdateProjectsWorker {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new(pool: PgPool, client: HttpClient) -> Self {
+        Self { pool, client }
     }
 
     async fn update_next_project(&self) -> anyhow::Result<bool> {
@@ -39,8 +48,18 @@ impl UpdateProjectsWorker {
         info!(project.name, overdue_seconds, "updating project");
         histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
 
-        let num_tasks: usize = 0;
-        let update_period = if num_tasks == 0 {
+        let repology_packages =
+            api::repology::fetch_project_packages(self.client.as_ref(), &project.name).await?;
+
+        info!(
+            project.name,
+            num_packages = repology_packages.len(),
+            "fetched repology packages"
+        );
+
+        let tasks = generate_tasks(&repology_packages);
+
+        let update_period = if tasks.is_empty() {
             INACTIVE_PROJECT_UPDATE_PERIOD
         } else {
             ACTIVE_PROJECT_UPDATE_PERIOD
@@ -54,10 +73,12 @@ impl UpdateProjectsWorker {
 
         info!(
             project.name,
-            check_duration_seconds, num_tasks, "project updated"
+            check_duration_seconds,
+            num_tasks = tasks.len(),
+            "project updated"
         );
         histogram!("wiyci_daemon_project_update_duration_seconds").record(check_duration_seconds);
-        counter!("wiyci_daemon_project_updates_total", "type" => if num_tasks > 0 { "active" } else { "inactive" }).increment(1);
+        counter!("wiyci_daemon_project_updates_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
 
         Ok(true)
     }
