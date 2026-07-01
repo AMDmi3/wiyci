@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+mod tasks;
+
 use std::time::{Duration, Instant};
 
 use metrics::{counter, histogram};
@@ -10,7 +12,6 @@ use tracing::{error, info};
 
 use wiyci_common::api;
 use wiyci_common::db;
-use wiyci_common::models::repology::RepologyPackage;
 
 use crate::HttpClient;
 
@@ -23,10 +24,6 @@ const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
 pub struct UpdateProjectsWorker {
     pool: PgPool,
     client: HttpClient,
-}
-
-fn generate_tasks(_packages: &[RepologyPackage]) -> Vec<()> {
-    vec![]
 }
 
 impl UpdateProjectsWorker {
@@ -57,7 +54,7 @@ impl UpdateProjectsWorker {
             "fetched repology packages"
         );
 
-        let tasks = generate_tasks(&repology_packages);
+        let tasks = tasks::generate_tasks(&repology_packages);
 
         let update_period = if tasks.is_empty() {
             INACTIVE_PROJECT_UPDATE_PERIOD
@@ -65,7 +62,10 @@ impl UpdateProjectsWorker {
             ACTIVE_PROJECT_UPDATE_PERIOD
         };
 
-        db::projects::register_update(&self.pool, &project.name, 0, update_period).await?;
+        db::fetch_tasks::update_tasks_for_project(&self.pool, &project.name, &tasks).await?;
+
+        db::projects::register_update(&self.pool, &project.name, tasks.len() as u32, update_period)
+            .await?;
 
         let check_duration_seconds = Instant::now()
             .saturating_duration_since(start)
