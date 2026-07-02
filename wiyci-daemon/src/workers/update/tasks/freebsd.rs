@@ -14,11 +14,11 @@ struct BuilderInfo {
 const BUILDERS: &[BuilderInfo] = &[
     BuilderInfo {
         variant: "150amd64",
-        url: "https://pkg-status.freebsd.org/beefy23/data/150amd64-default/latest/logs",
+        url: "https://pkg-status.freebsd.org/beefy23/data/latest-per-pkg/{binname}/{version}/150amd64-default.log",
     },
     BuilderInfo {
         variant: "150arm64",
-        url: "https://pkg-status.freebsd.org/ampere5/data/150arm64-default/latest/logs",
+        url: "https://pkg-status.freebsd.org/ampere5/data/latest-per-pkg/{binname}/{version}/150arm64-default.log",
     },
 ];
 
@@ -34,7 +34,10 @@ where
 
     for builder in BUILDERS {
         tasks.extend(std::iter::once(NewFetchTask {
-            url: format!("{}/{}-{}.log", builder.url, binname, version),
+            url: builder
+                .url
+                .replace("{binname}", binname)
+                .replace("{version}", version),
             variant: Some(builder.variant.into()),
             version: Some(package.version.clone()),
         }));
