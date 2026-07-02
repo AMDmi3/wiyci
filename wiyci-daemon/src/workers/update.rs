@@ -8,10 +8,11 @@ use std::time::{Duration, Instant};
 use metrics::{counter, histogram};
 use sqlx::PgPool;
 use time::OffsetDateTime;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 use wiyci_common::api;
 use wiyci_common::db;
+use wiyci_common::models::projects::Project;
 
 use crate::HttpClient;
 
@@ -26,33 +27,18 @@ pub struct UpdateProjectsWorker {
     client: HttpClient,
 }
 
+struct Status {
+    num_tasks: usize,
+}
+
 impl UpdateProjectsWorker {
     pub fn new(pool: PgPool, client: HttpClient) -> Self {
         Self { pool, client }
     }
 
-    async fn update_next_project(&self) -> anyhow::Result<bool> {
-        let start = Instant::now();
-
-        let Some(project) = db::projects::get_next_for_update(&self.pool).await? else {
-            return Ok(false);
-        };
-
-        let overdue_seconds = (OffsetDateTime::now_utc() - project.next_update_at)
-            .as_seconds_f64()
-            .max(0.0);
-
-        info!(project.name, overdue_seconds, "updating project");
-        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
-
+    async fn update_project_inner(&self, project: &Project) -> anyhow::Result<Status> {
         let repology_packages =
             api::repology::fetch_project_packages(self.client.as_ref(), &project.name).await?;
-
-        info!(
-            project.name,
-            num_packages = repology_packages.len(),
-            "fetched repology packages"
-        );
 
         let tasks = tasks::generate_tasks(&repology_packages);
 
@@ -67,19 +53,55 @@ impl UpdateProjectsWorker {
         db::projects::register_update(&self.pool, &project.name, tasks.len() as u32, update_period)
             .await?;
 
-        let check_duration_seconds = Instant::now()
+        Ok(Status {
+            num_tasks: tasks.len(),
+        })
+    }
+
+    #[cfg_attr(
+        not(coverage),
+        tracing::instrument(name = "update_project", skip_all, fields(project_name = project.name))
+    )]
+    async fn update_project(&self, project: &Project) -> anyhow::Result<()> {
+        let start = Instant::now();
+
+        let overdue_seconds = (OffsetDateTime::now_utc() - project.next_update_at)
+            .as_seconds_f64()
+            .max(0.0);
+
+        info!(overdue_seconds, "updating project");
+        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
+
+        let res = self.update_project_inner(project).await;
+
+        let duration_seconds = Instant::now()
             .saturating_duration_since(start)
             .as_secs_f64();
 
-        info!(
-            project.name,
-            check_duration_seconds,
-            num_tasks = tasks.len(),
-            "project updated"
-        );
-        histogram!("wiyci_daemon_project_update_duration_seconds").record(check_duration_seconds);
-        counter!("wiyci_daemon_project_updates_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
+        histogram!("wiyci_daemon_project_update_duration_seconds").record(duration_seconds);
 
+        match &res {
+            Ok(status) => {
+                counter!("wiyci_daemon_project_updates_total", "status" => "success", "type" => if status.num_tasks == 0 { "inactive" } else { "active" }).increment(1);
+                info!(
+                    duration_seconds,
+                    num_tasks = status.num_tasks,
+                    "project updated"
+                );
+            }
+            Err(_) => {
+                counter!("wiyci_daemon_project_updates_total", "status" => "failed").increment(1);
+            }
+        }
+        res.map(|_| ())
+    }
+
+    async fn process_next_task(&self) -> anyhow::Result<bool> {
+        let Some(project) = db::projects::get_next_for_update(&self.pool).await? else {
+            return Ok(false);
+        };
+
+        self.update_project(&project).await?;
         Ok(true)
     }
 
@@ -89,10 +111,10 @@ impl UpdateProjectsWorker {
     )]
     pub async fn run(&self) -> anyhow::Result<()> {
         loop {
-            match self.update_next_project().await {
+            match self.process_next_task().await {
                 Ok(true) => {}
                 Ok(false) => {
-                    info!("waiting for projects to update");
+                    debug!("waiting for tasks");
                     tokio::time::sleep(ITERATION_INTERVAL).await;
                 }
                 Err(error) => {
