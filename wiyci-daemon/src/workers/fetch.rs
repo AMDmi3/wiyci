@@ -21,7 +21,7 @@ use crate::HttpClient;
 use crate::storage::LogStorage;
 
 const RETRY_INTERVAL: Duration = Duration::from_mins(1);
-const ITERATION_INTERVAL: Duration = Duration::from_mins(1);
+const ITERATION_INTERVAL: Duration = Duration::from_secs(5);
 
 const MAX_ATTEMPTS: u32 = 5;
 

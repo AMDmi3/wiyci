@@ -16,7 +16,7 @@ use wiyci_common::db;
 use crate::HttpClient;
 
 const RETRY_INTERVAL: Duration = Duration::from_mins(1);
-const ITERATION_INTERVAL: Duration = Duration::from_mins(1);
+const ITERATION_INTERVAL: Duration = Duration::from_secs(5);
 
 const ACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(1);
 const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
