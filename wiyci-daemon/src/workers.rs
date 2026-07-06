@@ -3,8 +3,10 @@
 
 mod discover;
 mod fetch;
+mod parse;
 mod update;
 
 pub use discover::*;
 pub use fetch::*;
+pub use parse::*;
 pub use update::*;

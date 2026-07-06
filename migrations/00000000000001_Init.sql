@@ -49,7 +49,12 @@ CREATE TABLE logs (
 	-- from fetch
 	size                  INTEGER NOT NULL,
 	last_modified         TIMESTAMPTZ,
-	etag                  TEXT
+	etag                  TEXT,
+	-- from parse
+	parsed_at             TIMESTAMPTZ,
+	parser_version        INTEGER,
+	parsed_num_lines      INTEGER
 );
 
 CREATE INDEX logs_project_idx ON logs(project_name);
+CREATE UNIQUE INDEX logs_parse_queue_idx ON logs(parser_version NULLS FIRST, id);

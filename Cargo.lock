@@ -4284,6 +4284,7 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "wiyci-common",
+ "wiyci-parser",
 ]
 
 [[package]]

@@ -48,7 +48,8 @@ async fn main() -> anyhow::Result<()> {
     let discover = workers::DiscoverProjectsWorker::new(pool.clone());
     let update = workers::UpdateProjectsWorker::new(pool.clone(), client.clone());
     let fetch = workers::FetchLogsWorker::new(pool.clone(), client.clone(), storage.clone());
-    tokio::try_join!(discover.run(), update.run(), fetch.run())
+    let parse = workers::ParseLogsWorker::new(pool.clone(), storage.clone());
+    tokio::try_join!(discover.run(), update.run(), fetch.run(), parse.run())
         .context("worker finished with error")?;
 
     Ok(())

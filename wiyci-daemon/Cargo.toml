@@ -31,6 +31,7 @@ tracing-loki = { version = "0.2.7", features = ["compat-0-2-1"] }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "time"] }
 url = { version = "2.5.8", features = ["serde"] }
 wiyci-common = { path = "../wiyci-common" }
+wiyci-parser = { path = "../wiyci-parser" }
 
 [dev-dependencies]
 tempfile = "3.27.0"
