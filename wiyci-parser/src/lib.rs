@@ -6,6 +6,7 @@
 #[macro_use]
 mod typed_storage;
 
+mod matching;
 pub mod snippets;
 
 use std::io::BufRead;
@@ -13,6 +14,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
+use crate::matching::SimplifiedCaptures;
 use crate::snippets::SnippetStorage;
 
 // XXX: is position (second number after path) mandatory?
@@ -47,27 +49,10 @@ impl LogParser {
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
                 let warning = snippets::CompilerWarning {
-                    path: r#match
-                        .get(1)
-                        .expect("capture group presence ensured by the regex")
-                        .as_str()
-                        .to_string(),
-                    line_number: r#match
-                        .get(2)
-                        .expect("capture group presence ensured by the regex")
-                        .as_str()
-                        .parse()
-                        .expect("parsable integer ensured by the regex"),
-                    category: r#match
-                        .get(4)
-                        .expect("capture group presence ensured by the regex")
-                        .as_str()
-                        .to_string(),
-                    message: r#match
-                        .get(3)
-                        .expect("capture group presence ensured by the regex")
-                        .as_str()
-                        .to_string(),
+                    path: r#match.get_any(1),
+                    line_number: r#match.get_any(2),
+                    category: r#match.get_any(4),
+                    message: r#match.get_any(3),
                 };
 
                 res.snippets.get_mut().push(warning);
