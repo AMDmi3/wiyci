@@ -1,5 +1,5 @@
 [workspace]
-members = ["wiyci-web", "wiyci-daemon", "wiyci-common"]
+members = ["wiyci-web", "wiyci-daemon", "wiyci-common", "wiyci-parser"]
 resolver = "3"
 
 [workspace.package]
