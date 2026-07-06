@@ -39,7 +39,7 @@ pub struct Log {
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<u32>,
     pub parsed_num_lines: Option<u32>,
-    pub parsed_snippet_counts: Option<HashMap<String, u64>>,
+    pub parsed_snippet_counts: Option<HashMap<SnippetKind, u64>>,
 }
 
 impl Log {

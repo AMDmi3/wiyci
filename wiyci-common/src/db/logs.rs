@@ -66,7 +66,12 @@ impl From<DbLog> for Log {
             parsed_at: db.parsed_at,
             parser_version: db.parser_version.map(|v| v as u32),
             parsed_num_lines: db.parsed_num_lines.map(|v| v as u32),
-            parsed_snippet_counts: db.parsed_snippet_counts.map(|v| v.into_inner())
+            parsed_snippet_counts: db.parsed_snippet_counts.map(|json| {
+                json.into_inner()
+                    .into_iter()
+                    .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
+                    .collect()
+            }),
         }
     }
 }

@@ -37,6 +37,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter", "time"] }
 url = { version = "2.5.8", features = ["serde"] }
 url-escape = "0.1.1"
 wiyci-common = { path = "../wiyci-common" }
+wiyci-parser = { path = "../wiyci-parser" }
 
 [dev-dependencies]
 automod = "1.0.17"

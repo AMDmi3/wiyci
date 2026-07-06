@@ -22,7 +22,7 @@
 			{{ log.variant }}
 			: {{ log.size}} bytes, {{ log.parsed_num_lines.unwrap_or_default() }} lines
 			{% if let Some(snippet_counts) = log.parsed_snippet_counts %}
-				{% if let Some(num_warnings) = snippet_counts.get("CompilerWarning") && **num_warnings > 0 %}
+				{% if let Some(num_warnings) = snippet_counts.get(&wiyci_parser::snippets::SnippetKind::CompilerWarning) && **num_warnings > 0 %}
 					, warnings: {{ num_warnings }}
 				{% endif %}
 			{% endif %}

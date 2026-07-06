@@ -4,6 +4,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use strum::EnumString;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
@@ -15,7 +16,7 @@ pub struct CompilerWarning {
 
 macro_rules! declare_snippets {
     ($($kind:ident,)+) => {
-        #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize, EnumString)]
         #[non_exhaustive]
         pub enum SnippetKind {
             $($kind),+
