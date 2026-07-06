@@ -53,7 +53,8 @@ CREATE TABLE logs (
 	-- from parse
 	parsed_at             TIMESTAMPTZ,
 	parser_version        INTEGER,
-	parsed_num_lines      INTEGER
+	parsed_num_lines      INTEGER,
+	parsed_snippet_counts JSONB
 );
 
 CREATE INDEX logs_project_idx ON logs(project_name);

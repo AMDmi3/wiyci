@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::collections::HashMap;
+
 use indoc::indoc;
-use sqlx::{FromRow, PgPool};
+use sqlx::{FromRow, PgPool, types::Json};
 use time::OffsetDateTime;
 
 use crate::models::logs::{Log, NewLog, ParsedLog};
@@ -42,6 +44,7 @@ pub struct DbLog {
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<i32>,
     pub parsed_num_lines: Option<i32>,
+    pub parsed_snippet_counts: Option<Json<HashMap<String, u64>>>,
 }
 
 impl From<DbLog> for Log {
@@ -63,6 +66,7 @@ impl From<DbLog> for Log {
             parsed_at: db.parsed_at,
             parser_version: db.parser_version.map(|v| v as u32),
             parsed_num_lines: db.parsed_num_lines.map(|v| v as u32),
+            parsed_snippet_counts: db.parsed_snippet_counts.map(|v| v.into_inner())
         }
     }
 }
@@ -90,11 +94,13 @@ pub async fn apply_parsed(pool: &PgPool, id: i32, parsed_log: &ParsedLog) -> sql
            SET parsed_at = now()
              , parser_version = $2
              , parsed_num_lines = $3
+             , parsed_snippet_counts = $4
          WHERE id = $1
     "})
     .bind(id)
     .bind(parsed_log.parser_version as i32)
     .bind(parsed_log.parsed_num_lines as i32)
+    .bind(Json(&parsed_log.parsed_snippet_counts))
     .execute(pool)
     .await?;
     Ok(())

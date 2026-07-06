@@ -1,7 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::collections::HashMap;
+
 use time::OffsetDateTime;
+
+use wiyci_parser::snippets::SnippetKind;
 
 pub struct NewLog {
     pub id: i32,
@@ -15,6 +19,7 @@ pub struct NewLog {
 pub struct ParsedLog {
     pub parser_version: u32,
     pub parsed_num_lines: u32,
+    pub parsed_snippet_counts: HashMap<SnippetKind, u64>,
 }
 
 pub struct Log {
@@ -34,6 +39,7 @@ pub struct Log {
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<u32>,
     pub parsed_num_lines: Option<u32>,
+    pub parsed_snippet_counts: Option<HashMap<String, u64>>,
 }
 
 impl Log {

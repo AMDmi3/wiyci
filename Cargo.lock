@@ -4289,6 +4289,7 @@ dependencies = [
  "serde",
  "sqlx",
  "time",
+ "wiyci-parser",
 ]
 
 [[package]]
@@ -4332,6 +4333,7 @@ dependencies = [
  "memchr",
  "paste",
  "regex",
+ "serde",
  "strip-ansi-escapes",
 ]
 

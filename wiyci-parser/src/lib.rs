@@ -6,7 +6,7 @@
 #[macro_use]
 mod typed_storage;
 
-mod snippets;
+pub mod snippets;
 
 use std::io::BufRead;
 use std::sync::LazyLock;
@@ -34,7 +34,8 @@ pub struct LogParseReport {
 pub struct LogParser;
 
 impl LogParser {
-    pub const VERSION: u32 = 1;
+    // Bump this on each change of parser output, so the daemon could reparse stored logs
+    pub const VERSION: u32 = 2;
 
     pub fn parse(&self, reader: impl BufRead) -> std::io::Result<LogParseReport> {
         let lines = reader.lines();

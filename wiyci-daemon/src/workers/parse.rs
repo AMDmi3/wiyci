@@ -40,6 +40,7 @@ impl ParseLogsWorker {
         let parsed = ParsedLog {
             parser_version: LogParser::VERSION,
             parsed_num_lines: report.parsed_lines as u32,
+            parsed_snippet_counts: report.snippets.counts_per_kind(),
         };
 
         db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;

@@ -3,6 +3,8 @@
 
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
     pub path: String,
@@ -13,7 +15,7 @@ pub struct CompilerWarning {
 
 macro_rules! declare_snippets {
     ($($kind:ident,)+) => {
-        #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+        #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
         #[non_exhaustive]
         pub enum SnippetKind {
             $($kind),+
