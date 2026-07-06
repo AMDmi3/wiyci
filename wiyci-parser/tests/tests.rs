@@ -37,7 +37,6 @@ fn test_basic_warning() {
 }
 
 #[test]
-#[ignore]
 fn test_clean_ansi() {
     let data = Cursor::new(indoc! {"
         c++ -c 1.cc

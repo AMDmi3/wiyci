@@ -41,7 +41,7 @@ impl LogParser {
         let mut res = LogParseReport::default();
 
         for line in lines {
-            let line = line?;
+            let line = strip_ansi_escapes::strip_str(line?);
             res.parsed_lines += 1;
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
