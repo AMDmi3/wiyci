@@ -7,8 +7,8 @@ use time::OffsetDateTime;
 #[derive(PartialEq, Eq, Hash)]
 pub struct NewFetchTask {
     pub url: String,
-    pub variant: Option<String>,
-    pub version: Option<String>,
+    pub version: String,
+    pub variant: String,
 }
 
 #[derive(FromRow)]
@@ -18,8 +18,8 @@ pub struct FetchTask {
 
     pub url: String,
     pub project_name: String,
-    pub variant: Option<String>,
-    pub version: Option<String>,
+    pub version: String,
+    pub variant: String,
 
     #[sqlx(try_from = "i32")]
     pub num_attempts: u32,

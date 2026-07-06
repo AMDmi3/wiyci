@@ -9,8 +9,8 @@ use crate::models::logs::{Log, NewLog, ParsedLog};
 
 pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
     sqlx::query(indoc! {"
-        INSERT INTO logs(id, fetch_task_id, url, project_name, variant, version, size, last_modified, etag)
-             SELECT $1, $2, url, project_name, variant, version, $3, $4, $5
+        INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, size, last_modified, etag)
+             SELECT $1, $2, url, project_name, version, variant, $3, $4, $5
                FROM fetch_tasks
               WHERE id = $2
     "})
@@ -32,8 +32,8 @@ pub struct DbLog {
 
     pub url: String,
     pub project_name: String,
-    pub variant: Option<String>,
-    pub version: Option<String>,
+    pub version: String,
+    pub variant: String,
 
     pub size: i32,
     pub last_modified: Option<OffsetDateTime>,
@@ -42,6 +42,29 @@ pub struct DbLog {
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<i32>,
     pub parsed_num_lines: Option<i32>,
+}
+
+impl Into<Log> for DbLog {
+    fn into(self) -> Log {
+        Log {
+            id: self.id,
+            fetch_task_id: self.fetch_task_id,
+            created_at: self.created_at,
+
+            url: self.url,
+            project_name: self.project_name,
+            version: self.version,
+            variant: self.variant,
+
+            size: self.size as u64,
+            last_modified: self.last_modified,
+            etag: self.etag,
+
+            parsed_at: self.parsed_at,
+            parser_version: self.parser_version.map(|v| v as u32),
+            parsed_num_lines: self.parsed_num_lines.map(|v| v as u32),
+        }
+    }
 }
 
 pub async fn get_next_for_parsing(
@@ -58,24 +81,7 @@ pub async fn get_next_for_parsing(
     .bind(current_parser_version as i32)
     .fetch_optional(pool)
     .await?;
-    Ok(log.map(|log| Log {
-        id: log.id,
-        fetch_task_id: log.fetch_task_id,
-        created_at: log.created_at,
-
-        url: log.url,
-        project_name: log.project_name,
-        variant: log.variant,
-        version: log.version,
-
-        size: log.size as u64,
-        last_modified: log.last_modified,
-        etag: log.etag,
-
-        parsed_at: log.parsed_at,
-        parser_version: log.parser_version.map(|v| v as u32),
-        parsed_num_lines: log.parsed_num_lines.map(|v| v as u32),
-    }))
+    Ok(log.map(|log| log.into()))
 }
 
 pub async fn apply_parsed(pool: &PgPool, id: i32, parsed_log: &ParsedLog) -> sqlx::Result<()> {

@@ -26,8 +26,8 @@ where
                 version.replace('-', "/"),
                 arch
             ),
-            variant: Some(arch.into()),
-            version: Some(package.version.clone()),
+            variant: format!("Fedora {}", arch),
+            version: package.version.clone(),
         }));
     }
 

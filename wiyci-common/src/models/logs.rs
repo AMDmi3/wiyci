@@ -24,8 +24,8 @@ pub struct Log {
 
     pub url: String,
     pub project_name: String,
-    pub variant: Option<String>,
-    pub version: Option<String>,
+    pub version: String,
+    pub variant: String,
 
     pub size: u64,
     pub last_modified: Option<OffsetDateTime>,

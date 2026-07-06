@@ -38,8 +38,8 @@ where
                 .url
                 .replace("{binname}", binname)
                 .replace("{version}", version),
-            variant: Some(builder.variant.into()),
-            version: Some(package.version.clone()),
+            variant: format!("FreeBSD {}", builder.variant),
+            version: package.version.clone(),
         }));
     }
 

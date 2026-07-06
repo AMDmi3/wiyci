@@ -37,8 +37,8 @@ where
                 "https://build.alpinelinux.org/buildlogs/build-edge-{}/{}/{}/{}-{}.log",
                 arch, subrepo, srcname, srcname, version
             ),
-            variant: Some(arch.into()),
-            version: Some(package.version.clone()),
+            variant: format!("Alpine {}", arch),
+            version: package.version.clone(),
         }));
     }
 

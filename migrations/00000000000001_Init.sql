@@ -23,8 +23,8 @@ CREATE TABLE fetch_tasks (
 	-- identifiers
 	url                     TEXT NOT NULL,
 	project_name            TEXT NOT NULL REFERENCES projects(name),
-	variant                 TEXT,
-	version                 TEXT,
+	version                 TEXT NOT NULL,
+	variant                 TEXT NOT NULL,
 	-- fetch status
 	num_attempts            INTEGER NOT NULL DEFAULT 0,
 	next_fetch_attempt_at   TIMESTAMPTZ DEFAULT now(),
@@ -44,8 +44,8 @@ CREATE TABLE logs (
 	-- identifiers
 	url                   TEXT NOT NULL,
 	project_name          TEXT NOT NULL REFERENCES projects(name),
-	variant               TEXT,
-	version               TEXT,
+	version               TEXT NOT NULL,
+	variant               TEXT NOT NULL,
 	-- from fetch
 	size                  INTEGER NOT NULL,
 	last_modified         TIMESTAMPTZ,

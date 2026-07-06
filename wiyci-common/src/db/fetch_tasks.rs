@@ -68,19 +68,19 @@ pub async fn update_tasks_for_project(
 
     for task in tasks {
         sqlx::query(indoc! {"
-            INSERT INTO fetch_tasks(project_name, url, variant, version)
+            INSERT INTO fetch_tasks(project_name, url, version, variant)
                  VALUES ($1, $2, $3, $4)
             ON CONFLICT (project_name, url)
               DO UPDATE
-                    SET variant = EXCLUDED.variant
-                      , version = EXCLUDED.version
-                  WHERE fetch_tasks.variant IS DISTINCT FROM EXCLUDED.variant
-                     OR fetch_tasks.version IS DISTINCT FROM EXCLUDED.version
+                    SET version = EXCLUDED.version
+                      , variant = EXCLUDED.variant
+                  WHERE fetch_tasks.version IS DISTINCT FROM EXCLUDED.version
+                     OR fetch_tasks.variant IS DISTINCT FROM EXCLUDED.variant
         "})
         .bind(project_name)
         .bind(&task.url)
-        .bind(&task.variant)
         .bind(&task.version)
+        .bind(&task.variant)
         .execute(&mut *tx)
         .await?;
     }
