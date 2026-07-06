@@ -3,8 +3,29 @@
 {% block header %}Project {{ project.name }}{% endblock %}
 {% block content %}
 
-<ul>
-	<li><strong>Created at:</strong> {{ project.created_at.format(time::macros::format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).unwrap() }}</li>
-</ul>
+<p>
+	Known since {{ project.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}, discovered via <a href="https://repology.org/project/{{ project.name }}">repology</a>.
+</p>
+
+{% for section in sections %}
+<h2>Version {{ section.version }}</h2>
+<section>
+	<ul>
+		{% for log in section.logs %}
+		<li>
+			{% let fetched = log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() %}
+			{% if let Some(last_modified) = log.last_modified %}
+				{{ last_modified.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }} (fetched {{ fetched }})
+			{% else %}
+				fetched {{ fetched }}
+			{% endif %}
+			{{ log.variant }}
+			: {{ log.size}} bytes, {{ log.parsed_num_lines.unwrap_or_default() }} lines
+			(<a href="{{ log.url }}">original log</a>)
+		</li>
+		{% endfor %}
+	</ul>
+<section>
+{% endfor %}
 
 {% endblock content %}

@@ -1555,6 +1555,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1688,6 +1697,15 @@ checksum = "b1f111c8c41e7c61a49cd34e44c7619462967221a6443b0ec299e0ac30cfb9b1"
 dependencies = [
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "libversion"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "405c304b0e2dc36a3b1d5e110d1417a73ca6f63d87ba08ef850c7f6b54d61a55"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]
@@ -4315,6 +4333,8 @@ dependencies = [
  "indexmap",
  "indoc",
  "insta",
+ "itertools 0.15.0",
+ "libversion",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-process",

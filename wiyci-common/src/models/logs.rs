@@ -35,3 +35,9 @@ pub struct Log {
     pub parser_version: Option<u32>,
     pub parsed_num_lines: Option<u32>,
 }
+
+impl Log {
+    pub fn datetime(&self) -> OffsetDateTime {
+        self.last_modified.unwrap_or(self.created_at)
+    }
+}

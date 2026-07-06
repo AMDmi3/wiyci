@@ -44,25 +44,25 @@ pub struct DbLog {
     pub parsed_num_lines: Option<i32>,
 }
 
-impl Into<Log> for DbLog {
-    fn into(self) -> Log {
-        Log {
-            id: self.id,
-            fetch_task_id: self.fetch_task_id,
-            created_at: self.created_at,
+impl From<DbLog> for Log {
+    fn from(db: DbLog) -> Self {
+        Self {
+            id: db.id,
+            fetch_task_id: db.fetch_task_id,
+            created_at: db.created_at,
 
-            url: self.url,
-            project_name: self.project_name,
-            version: self.version,
-            variant: self.variant,
+            url: db.url,
+            project_name: db.project_name,
+            version: db.version,
+            variant: db.variant,
 
-            size: self.size as u64,
-            last_modified: self.last_modified,
-            etag: self.etag,
+            size: db.size as u64,
+            last_modified: db.last_modified,
+            etag: db.etag,
 
-            parsed_at: self.parsed_at,
-            parser_version: self.parser_version.map(|v| v as u32),
-            parsed_num_lines: self.parsed_num_lines.map(|v| v as u32),
+            parsed_at: db.parsed_at,
+            parser_version: db.parser_version.map(|v| v as u32),
+            parsed_num_lines: db.parsed_num_lines.map(|v| v as u32),
         }
     }
 }
@@ -98,4 +98,17 @@ pub async fn apply_parsed(pool: &PgPool, id: i32, parsed_log: &ParsedLog) -> sql
     .execute(pool)
     .await?;
     Ok(())
+}
+
+pub async fn list_for_project(pool: &PgPool, project_name: &str) -> sqlx::Result<Vec<Log>> {
+    let logs: Vec<DbLog> = sqlx::query_as(indoc! {"
+        SELECT *
+          FROM logs
+         WHERE project_name = $1
+           AND parser_version IS NOT NULL
+    "})
+    .bind(project_name)
+    .fetch_all(pool)
+    .await?;
+    Ok(logs.into_iter().map(|log| log.into()).collect())
 }
