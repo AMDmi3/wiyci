@@ -4349,6 +4349,7 @@ dependencies = [
 name = "wiyci-parser"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "indoc",
  "insta",
  "itertools 0.15.0",

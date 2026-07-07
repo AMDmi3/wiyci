@@ -13,6 +13,7 @@ pub mod snippets;
 use std::io::BufRead;
 use std::sync::LazyLock;
 
+use bitflags::bitflags;
 use regex::Regex;
 
 use crate::lines::SafeLines;
@@ -28,10 +29,21 @@ static COMPILER_WARNING_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap()
 });
 
+bitflags! {
+    #[derive(Debug, Default, PartialEq, Eq)]
+    pub struct Flags: u32 {
+        const HAD_TRUNCATED_LINES = 1 << 0;
+        const HAD_INVALID_UTF8 = 1 << 1;
+        const TOO_MANY_LINES = 1 << 2;
+        const TOO_MANY_SNIPPETS = 1 << 3;
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct LogParseReport {
     pub parsed_lines: u64,
     pub snippets: SnippetStorage,
+    pub flags: Flags,
 }
 
 #[derive(Default)]
@@ -65,7 +77,24 @@ impl LogParser {
         let mut res = LogParseReport::default();
 
         for line in lines {
-            let line = strip_ansi_escapes::strip_str(line?.string);
+            let line = line?;
+            if line.was_truncated {
+                res.flags |= Flags::HAD_TRUNCATED_LINES;
+            }
+            if line.had_invalid_utf8 {
+                res.flags |= Flags::HAD_INVALID_UTF8;
+            }
+
+            if self.max_lines.is_some_and(|n| res.parsed_lines >= n) {
+                res.flags |= Flags::TOO_MANY_LINES;
+                break;
+            }
+            if self.max_snippets.is_some_and(|n| res.snippets.len() >= n) {
+                res.flags |= Flags::TOO_MANY_SNIPPETS;
+                break;
+            }
+
+            let line = strip_ansi_escapes::strip_str(line.string);
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
                 let warning = snippets::CompilerWarning {
@@ -79,18 +108,6 @@ impl LogParser {
             }
 
             res.parsed_lines += 1;
-            if self
-                .max_lines
-                .is_some_and(|max_lines| res.parsed_lines >= max_lines)
-            {
-                break;
-            }
-            if self
-                .max_snippets
-                .is_some_and(|max_snippets| res.snippets.len() >= max_snippets)
-            {
-                break;
-            }
         }
 
         Ok(res)
