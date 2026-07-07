@@ -50,7 +50,8 @@ pub struct LogParseReport {
 pub struct LogParser {
     max_line_length: Option<usize>,
     max_lines: Option<u64>,
-    max_snippets: Option<usize>,
+    max_total_snippets: Option<usize>,
+    max_snippets_per_kind: Option<usize>,
 }
 
 impl LogParser {
@@ -67,8 +68,13 @@ impl LogParser {
         self
     }
 
-    pub fn with_max_snippets(mut self, max_snippets: Option<usize>) -> Self {
-        self.max_snippets = max_snippets;
+    pub fn with_max_total_snippets(mut self, max_total_snippets: Option<usize>) -> Self {
+        self.max_total_snippets = max_total_snippets;
+        self
+    }
+
+    pub fn with_max_snippets_per_kind(mut self, max_snippets_per_kind: Option<usize>) -> Self {
+        self.max_snippets_per_kind = max_snippets_per_kind;
         self
     }
 
@@ -89,7 +95,10 @@ impl LogParser {
                 res.flags |= Flags::TOO_MANY_LINES;
                 break;
             }
-            if self.max_snippets.is_some_and(|n| res.snippets.len() >= n) {
+            if self
+                .max_total_snippets
+                .is_some_and(|n| res.snippets.len() >= n)
+            {
                 res.flags |= Flags::TOO_MANY_SNIPPETS;
                 break;
             }
@@ -104,7 +113,17 @@ impl LogParser {
                     message: r#match.get_any(3),
                 };
 
-                res.snippets.get_mut().push(warning);
+                {
+                    let snippets = res.snippets.get_mut();
+                    if self
+                        .max_snippets_per_kind
+                        .is_some_and(|n| snippets.len() >= n)
+                    {
+                        res.flags |= Flags::TOO_MANY_SNIPPETS;
+                    } else {
+                        snippets.push(warning);
+                    }
+                }
             }
 
             res.parsed_lines += 1;

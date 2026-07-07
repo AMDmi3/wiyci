@@ -5,7 +5,7 @@ use std::io::Cursor;
 
 use indoc::indoc;
 
-use wiyci_parser::{Flags, LogParser};
+use wiyci_parser::{Flags, LogParser, snippets::CompilerWarning};
 
 #[test]
 fn test_max_lines() {
@@ -51,27 +51,47 @@ fn test_max_line_length() {
 }
 
 #[test]
-fn test_max_snippets() {
+fn test_max_total_snippets() {
     let data = Cursor::new(indoc! {r#"
         1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
         1.cc:2:12: warning: no return statement in function returning non-void [-Wreturn-type]
         1.cc:3:12: warning: no return statement in function returning non-void [-Wreturn-type]
     "#});
 
-    assert_eq!(
-        LogParser::default()
-            .with_max_snippets(Some(3))
-            .parse(data.clone())
-            .unwrap()
-            .flags,
-        Flags::empty()
-    );
-    assert_eq!(
-        LogParser::default()
-            .with_max_snippets(Some(2))
-            .parse(data.clone())
-            .unwrap()
-            .flags,
-        Flags::TOO_MANY_SNIPPETS
-    );
+    let res = LogParser::default()
+        .with_max_total_snippets(Some(3))
+        .parse(data.clone())
+        .unwrap();
+    assert_eq!(res.flags, Flags::empty());
+    assert_eq!(res.snippets.get::<CompilerWarning>().len(), 3);
+
+    let res = LogParser::default()
+        .with_max_total_snippets(Some(2))
+        .parse(data.clone())
+        .unwrap();
+    assert_eq!(res.flags, Flags::TOO_MANY_SNIPPETS);
+    assert_eq!(res.snippets.get::<CompilerWarning>().len(), 2);
+}
+
+#[test]
+fn test_max_snippets_per_kind() {
+    let data = Cursor::new(indoc! {r#"
+        1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
+        1.cc:2:12: warning: no return statement in function returning non-void [-Wreturn-type]
+        1.cc:3:12: warning: no return statement in function returning non-void [-Wreturn-type]
+    "#});
+
+    let res = LogParser::default()
+        .with_max_snippets_per_kind(Some(3))
+        .parse(data.clone())
+        .unwrap();
+    assert_eq!(res.flags, Flags::empty());
+    assert_eq!(res.snippets.get::<CompilerWarning>().len(), 3);
+
+    let res = LogParser::default()
+        .with_max_snippets_per_kind(Some(2))
+        .parse(data.clone())
+        .unwrap();
+    assert_eq!(res.flags, Flags::TOO_MANY_SNIPPETS);
+    assert_eq!(res.snippets.get::<CompilerWarning>().len(), 2);
 }
