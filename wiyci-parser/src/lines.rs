@@ -66,8 +66,8 @@ impl<B: BufRead> Iterator for SafeLines<B> {
 
         loop {
             match self.reader.fill_buf() {
-                Ok(no_more_bytes) if no_more_bytes.is_empty() && accum.is_empty() => return None,
-                Ok(no_more_bytes) if no_more_bytes.is_empty() => {
+                Ok([]) if accum.is_empty() => return None,
+                Ok([]) => {
                     return Some(Ok(Line::from_buffer(
                         std::mem::take(&mut accum),
                         was_truncated,
