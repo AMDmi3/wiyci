@@ -36,6 +36,13 @@ macro_rules! declare_snippets {
                     ),+
                 ].into_iter().collect()
             }
+
+            pub fn len(&self) -> usize {
+                $(
+                    self.get::<$kind>().len() +
+                ),+
+                0
+            }
         }
     }
 }

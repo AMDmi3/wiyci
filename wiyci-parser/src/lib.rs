@@ -37,6 +37,8 @@ pub struct LogParseReport {
 #[derive(Default)]
 pub struct LogParser {
     max_line_length: Option<usize>,
+    max_lines: Option<u64>,
+    max_snippets: Option<usize>,
 }
 
 impl LogParser {
@@ -48,13 +50,22 @@ impl LogParser {
         self
     }
 
+    pub fn with_max_lines(mut self, max_lines: Option<u64>) -> Self {
+        self.max_lines = max_lines;
+        self
+    }
+
+    pub fn with_max_snippets(mut self, max_snippets: Option<usize>) -> Self {
+        self.max_snippets = max_snippets;
+        self
+    }
+
     pub fn parse(&self, reader: impl BufRead) -> std::io::Result<LogParseReport> {
         let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut res = LogParseReport::default();
 
         for line in lines {
             let line = strip_ansi_escapes::strip_str(line?.string);
-            res.parsed_lines += 1;
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
                 let warning = snippets::CompilerWarning {
@@ -65,6 +76,20 @@ impl LogParser {
                 };
 
                 res.snippets.get_mut().push(warning);
+            }
+
+            res.parsed_lines += 1;
+            if self
+                .max_lines
+                .is_some_and(|max_lines| res.parsed_lines >= max_lines)
+            {
+                break;
+            }
+            if self
+                .max_snippets
+                .is_some_and(|max_snippets| res.snippets.len() >= max_snippets)
+            {
+                break;
             }
         }
 
