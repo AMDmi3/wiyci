@@ -37,6 +37,13 @@ macro_rules! declare_snippets {
                 ].into_iter().collect()
             }
 
+            pub fn is_empty(&self) -> bool {
+                $(
+                    self.get::<$kind>().is_empty() &&
+                ),+
+                true
+            }
+
             pub fn len(&self) -> usize {
                 $(
                     self.get::<$kind>().len() +
