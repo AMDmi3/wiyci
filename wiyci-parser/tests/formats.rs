@@ -27,6 +27,25 @@ fn test_plain() {
 }
 
 #[test]
+fn test_bad_utf8() {
+    let data = Cursor::new(indoc! {b"
+        c++ -c 1.cc
+        1.cc: In function 'int foo()':
+        1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
+            1 | int foo() { const char badutf = \"\xc3\" }
+              |            ^
+    "});
+
+    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
+    let warning = &res.snippets.get::<snippets::CompilerWarning>()[0];
+
+    assert_eq!(
+        warning.message,
+        "warning: no return statement in function returning non-void [-Wreturn-type]"
+    );
+}
+
+#[test]
 fn test_ansi() {
     let data = Cursor::new(indoc! {"
         c++ -c 1.cc

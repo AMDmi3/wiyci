@@ -4351,6 +4351,7 @@ version = "0.1.0"
 dependencies = [
  "indoc",
  "insta",
+ "itertools 0.15.0",
  "memchr",
  "paste",
  "regex",

@@ -6,6 +6,7 @@
 #[macro_use]
 mod typed_storage;
 
+mod lines;
 mod matching;
 pub mod snippets;
 
@@ -14,6 +15,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
+use crate::lines::SafeLines;
 use crate::matching::SimplifiedCaptures;
 use crate::snippets::SnippetStorage;
 
@@ -33,18 +35,25 @@ pub struct LogParseReport {
 }
 
 #[derive(Default)]
-pub struct LogParser;
+pub struct LogParser {
+    max_line_length: Option<usize>,
+}
 
 impl LogParser {
     // Bump this on each change of parser output, so the daemon could reparse stored logs
     pub const VERSION: u32 = 2;
 
+    pub fn with_max_line_length(mut self, max_line_length: Option<usize>) -> Self {
+        self.max_line_length = max_line_length;
+        self
+    }
+
     pub fn parse(&self, reader: impl BufRead) -> std::io::Result<LogParseReport> {
-        let lines = reader.lines();
+        let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut res = LogParseReport::default();
 
         for line in lines {
-            let line = strip_ansi_escapes::strip_str(line?);
+            let line = strip_ansi_escapes::strip_str(line?.string);
             res.parsed_lines += 1;
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {

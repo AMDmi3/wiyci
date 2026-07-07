@@ -18,3 +18,4 @@ strum = { version = "0.28.0", features = ["derive"] }
 [dev-dependencies]
 indoc = "2.0.7"
 insta = "1.48.0"
+itertools = "0.15.0"
