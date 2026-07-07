@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 macro_rules! typed_storage {
-    ($(#[$meta:meta])* $vis:vis $name:ident < $container:ty > { $($variant:ty),+ }) => {
+    ($(#[$meta:meta])* $vis:vis $name:ident < $container:ty > { $($variant:ty),+ $(,)? }) => {
         paste::paste! {
             #[allow(unused)]
             $vis trait [<StoredIn $name>]: Sized {

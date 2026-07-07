@@ -21,17 +21,17 @@ pub struct PytestFailedTest {
 }
 
 macro_rules! declare_snippets {
-    ($($kind:ident,)+) => {
+    ($($kind:ident),+ $(,)?) => {
         #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize, EnumString)]
         #[non_exhaustive]
         pub enum SnippetKind {
-            $($kind),+
+            $($kind,)+
         }
 
         typed_storage!(
             #[derive(Clone, Debug)]
             #[non_exhaustive]
-            pub SnippetStorage<Vec>{$($kind),+}
+            pub SnippetStorage<Vec>{$($kind,)+}
         );
 
         impl SnippetStorage {
