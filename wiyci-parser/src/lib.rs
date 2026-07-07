@@ -32,6 +32,13 @@ static COMPILER_WARNING_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 static PYTEST_FAILED_TEST_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([^:]+)::([^ ]+) FAILED +\[[0-9 ]{3}%\]$").unwrap());
 
+static CATCH_FAILED_TEST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^[0-9]+/[0-9]+ Test #[0-9]+: ([^ ]+) \.+\*\*\*(Failed|Exception)").unwrap()
+});
+
+static GTEST_FAILED_TEST_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\[  FAILED  \] ([^ ]+) \([0-9]+ ms\)$").unwrap());
+
 bitflags! {
     #[derive(Debug, Default, PartialEq, Eq)]
     pub struct Flags: u32 {
@@ -131,6 +138,38 @@ impl LogParser {
                 let snippet = snippets::PytestFailedTest {
                     path: r#match.get_any(1),
                     rest_of_nodeid: r#match.get_any(2),
+                };
+
+                {
+                    let snippets = res.snippets.get_mut();
+                    if self
+                        .max_snippets_per_kind
+                        .is_some_and(|n| snippets.len() >= n)
+                    {
+                        res.flags |= Flags::TOO_MANY_SNIPPETS;
+                    } else {
+                        snippets.push(snippet);
+                    }
+                }
+            } else if let Some(r#match) = CATCH_FAILED_TEST_REGEX.captures(&line) {
+                let snippet = snippets::CatchFailedTest {
+                    test_name: r#match.get_any(1),
+                };
+
+                {
+                    let snippets = res.snippets.get_mut();
+                    if self
+                        .max_snippets_per_kind
+                        .is_some_and(|n| snippets.len() >= n)
+                    {
+                        res.flags |= Flags::TOO_MANY_SNIPPETS;
+                    } else {
+                        snippets.push(snippet);
+                    }
+                }
+            } else if let Some(r#match) = GTEST_FAILED_TEST_REGEX.captures(&line) {
+                let snippet = snippets::GtestFailedTest {
+                    test_name: r#match.get_any(1),
                 };
 
                 {

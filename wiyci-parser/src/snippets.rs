@@ -20,6 +20,16 @@ pub struct PytestFailedTest {
     pub rest_of_nodeid: String,
 }
 
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
+pub struct CatchFailedTest {
+    pub test_name: String,
+}
+
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
+pub struct GtestFailedTest {
+    pub test_name: String,
+}
+
 macro_rules! declare_snippets {
     ($($kind:ident),+ $(,)?) => {
         #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize, EnumString)]
@@ -63,4 +73,6 @@ macro_rules! declare_snippets {
 declare_snippets! {
     CompilerWarning,
     PytestFailedTest,
+    CatchFailedTest,
+    GtestFailedTest,
 }
