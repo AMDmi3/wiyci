@@ -29,6 +29,9 @@ static COMPILER_WARNING_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap()
 });
 
+static PYTEST_FAILED_TEST_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^([^:]+)::([^ ]+) FAILED +\[[0-9 ]{3}%\]$").unwrap());
+
 bitflags! {
     #[derive(Debug, Default, PartialEq, Eq)]
     pub struct Flags: u32 {
@@ -106,7 +109,7 @@ impl LogParser {
             let line = strip_ansi_escapes::strip_str(line.string);
 
             if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
-                let warning = snippets::CompilerWarning {
+                let snippet = snippets::CompilerWarning {
                     path: r#match.get_any(1),
                     line_number: r#match.get_any(2),
                     category: r#match.get_any(4),
@@ -121,7 +124,24 @@ impl LogParser {
                     {
                         res.flags |= Flags::TOO_MANY_SNIPPETS;
                     } else {
-                        snippets.push(warning);
+                        snippets.push(snippet);
+                    }
+                }
+            } else if let Some(r#match) = PYTEST_FAILED_TEST_REGEX.captures(&line) {
+                let snippet = snippets::PytestFailedTest {
+                    path: r#match.get_any(1),
+                    rest_of_nodeid: r#match.get_any(2),
+                };
+
+                {
+                    let snippets = res.snippets.get_mut();
+                    if self
+                        .max_snippets_per_kind
+                        .is_some_and(|n| snippets.len() >= n)
+                    {
+                        res.flags |= Flags::TOO_MANY_SNIPPETS;
+                    } else {
+                        snippets.push(snippet);
                     }
                 }
             }

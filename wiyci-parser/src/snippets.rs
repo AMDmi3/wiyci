@@ -14,6 +14,12 @@ pub struct CompilerWarning {
     pub message: String,
 }
 
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
+pub struct PytestFailedTest {
+    pub path: String,
+    pub rest_of_nodeid: String,
+}
+
 macro_rules! declare_snippets {
     ($($kind:ident,)+) => {
         #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize, EnumString)]
@@ -33,21 +39,21 @@ macro_rules! declare_snippets {
                 [
                     $(
                         (SnippetKind::$kind, self.get::<$kind>().len() as u64),
-                    ),+
+                    )+
                 ].into_iter().collect()
             }
 
             pub fn is_empty(&self) -> bool {
                 $(
                     self.get::<$kind>().is_empty() &&
-                ),+
+                )+
                 true
             }
 
             pub fn len(&self) -> usize {
                 $(
                     self.get::<$kind>().len() +
-                ),+
+                )+
                 0
             }
         }
@@ -56,4 +62,5 @@ macro_rules! declare_snippets {
 
 declare_snippets! {
     CompilerWarning,
+    PytestFailedTest,
 }
