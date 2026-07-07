@@ -31,8 +31,11 @@ impl ParseLogsWorker {
         let report = {
             let id = log.id;
             let storage = self.storage.clone();
+            let parser = LogParser::default()
+                .with_max_line_length(Some(10240))
+                .with_max_snippets_per_kind(Some(1000));
             tokio::task::spawn_blocking(move || -> anyhow::Result<LogParseReport> {
-                Ok(LogParser::default().parse(BufReader::new(storage.open(id as u64)?))?)
+                Ok(parser.parse(BufReader::new(storage.open(id as u64)?))?)
             })
             .await??
         };
