@@ -5,7 +5,7 @@ use std::io::{BufReader, Cursor};
 
 use indoc::indoc;
 
-use wiyci_parser::{LogParser, snippets};
+use wiyci_parser::{Flags, LogParser, snippets};
 
 #[test]
 fn test_plain() {
@@ -24,6 +24,7 @@ fn test_plain() {
         warning.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
+    assert_eq!(res.flags, Flags::empty());
 }
 
 #[test]
@@ -43,6 +44,7 @@ fn test_bad_utf8() {
         warning.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
+    assert_eq!(res.flags, Flags::HAD_INVALID_UTF8);
 }
 
 #[test]
@@ -62,4 +64,5 @@ fn test_ansi() {
         warning.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
+    assert_eq!(res.flags, Flags::empty());
 }
