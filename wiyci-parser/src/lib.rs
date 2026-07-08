@@ -86,13 +86,6 @@ impl LogParser {
                 res.flags |= Flags::TOO_MANY_LINES;
                 break;
             }
-            if self
-                .max_total_snippets
-                .is_some_and(|n| res.snippets.len() >= n)
-            {
-                res.flags |= Flags::TOO_MANY_SNIPPETS;
-                break;
-            }
 
             let line = strip_ansi_escapes::strip_str(line.string);
 
@@ -101,7 +94,12 @@ impl LogParser {
             current_matchers.retain_mut(|matcher| match matcher.match_line(&line) {
                 SnippetMatchResult::NoMatch => false,
                 SnippetMatchResult::Complete(snippet) => {
-                    if !res
+                    if self
+                        .max_total_snippets
+                        .is_some_and(|n| res.snippets.len() >= n)
+                    {
+                        res.flags |= Flags::TOO_MANY_SNIPPETS;
+                    } else if !res
                         .snippets
                         .push_with_limit(snippet, self.max_snippets_per_kind)
                     {
