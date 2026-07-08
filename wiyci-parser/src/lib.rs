@@ -7,7 +7,6 @@
 mod typed_storage;
 
 mod lines;
-mod matchers;
 mod matching;
 pub mod snippets;
 
@@ -16,8 +15,8 @@ use std::io::BufRead;
 use bitflags::bitflags;
 
 use crate::lines::SafeLines;
-use crate::matchers::common::SnippetMatchResult;
-use crate::matchers::factory::try_spawn_matchers;
+use crate::matching::common::SnippetMatchResult;
+use crate::matching::factory::try_spawn_matchers;
 use crate::snippets::SnippetStorage;
 
 bitflags! {

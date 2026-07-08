@@ -5,8 +5,8 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use crate::matchers::common::{SnippetMatchResult, SnippetMatcher};
-use crate::matching::SimplifiedCaptures;
+use crate::matching::captures::SimplifiedCaptures;
+use crate::matching::common::{SnippetMatchResult, SnippetMatcher};
 use crate::snippets::{TestOutcome, TestResult};
 
 static PATTERN: &str = r"^\[  FAILED  \] ([^ ]+) \([0-9]+ ms\)$";

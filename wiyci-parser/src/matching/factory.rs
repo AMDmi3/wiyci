@@ -5,8 +5,8 @@ use std::sync::LazyLock;
 
 use regex::RegexSet;
 
-use crate::matchers::common::SnippetMatcher;
-use crate::matchers::matchers::*;
+use crate::matching::common::SnippetMatcher;
+use crate::matching::matchers::*;
 
 macro_rules! snippet_matcher_factory {
     ($($matcher:ident),+ $(,)?) => {
