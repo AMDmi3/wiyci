@@ -6,28 +6,27 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use strum::EnumString;
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
+    pub lines: Vec<String>,
     pub path: String,
     pub line_number: u32,
     pub category: String,
     pub message: String,
 }
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
-pub struct PytestFailedTest {
-    pub path: String,
-    pub rest_of_nodeid: String,
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum TestOutcome {
+    Passed,
+    Failed,
+    Skipped,
 }
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
-pub struct CatchFailedTest {
-    pub test_name: String,
-}
-
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
-pub struct GtestFailedTest {
-    pub test_name: String,
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct TestResult {
+    pub lines: Vec<String>,
+    pub name: String,
+    pub outcome: TestOutcome,
 }
 
 macro_rules! declare_snippets {
@@ -37,6 +36,18 @@ macro_rules! declare_snippets {
         pub enum SnippetKind {
             $($kind,)+
         }
+
+        pub enum AnySnippet {
+            $($kind($kind),)+
+        }
+
+        $(
+            impl From<$kind> for AnySnippet {
+                fn from(snippet: $kind) -> Self {
+                    Self::$kind(snippet)
+                }
+            }
+        )+
 
         typed_storage!(
             #[derive(Clone, Debug)]
@@ -66,13 +77,27 @@ macro_rules! declare_snippets {
                 )+
                 0
             }
+
+            pub fn push_with_limit(&mut self, snippet: AnySnippet, limit: Option<usize>) -> bool {
+                match snippet {
+                    $(
+                        AnySnippet::$kind(snippet) => {
+                            let storage = self.get_mut();
+                            if limit.is_none_or(|limit| storage.len() < limit) {
+                                storage.push(snippet);
+                                true
+                            } else {
+                                false
+                            }
+                        },
+                    )+
+                }
+            }
         }
     }
 }
 
 declare_snippets! {
     CompilerWarning,
-    PytestFailedTest,
-    CatchFailedTest,
-    GtestFailedTest,
+    TestResult,
 }

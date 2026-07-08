@@ -5,7 +5,7 @@ use std::io::{BufReader, Cursor};
 
 use indoc::indoc;
 
-use wiyci_parser::{LogParser, snippets};
+use wiyci_parser::{LogParser, snippets::*};
 
 #[test]
 fn test_compiler_warning() {
@@ -18,7 +18,7 @@ fn test_compiler_warning() {
     "#});
 
     let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let warnings = res.snippets.get::<snippets::CompilerWarning>();
+    let warnings = res.snippets.get::<CompilerWarning>();
 
     assert_eq!(warnings.len(), 1);
 
@@ -43,12 +43,18 @@ fn test_pytest_failed_test() {
     "#});
 
     let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let snippets = res.snippets.get::<snippets::PytestFailedTest>();
+    let snippets = res.snippets.get::<TestResult>();
 
     assert_eq!(snippets.len(), 2);
 
-    assert_eq!(snippets[0].path, "Tests/test_file_webp_animated.py");
-    assert_eq!(snippets[0].rest_of_nodeid, "test_write_animation_L");
-    assert_eq!(snippets[1].path, "Tests/test_file_webp_animated.py");
-    assert_eq!(snippets[1].rest_of_nodeid, "test_write_animation_RGB");
+    assert_eq!(
+        snippets[0].name,
+        "Tests/test_file_webp_animated.py::test_write_animation_L"
+    );
+    assert_eq!(snippets[0].outcome, TestOutcome::Failed);
+    assert_eq!(
+        snippets[1].name,
+        "Tests/test_file_webp_animated.py::test_write_animation_RGB"
+    );
+    assert_eq!(snippets[1].outcome, TestOutcome::Failed);
 }

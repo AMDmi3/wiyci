@@ -7,37 +7,18 @@
 mod typed_storage;
 
 mod lines;
+mod matchers;
 mod matching;
 pub mod snippets;
 
 use std::io::BufRead;
-use std::sync::LazyLock;
 
 use bitflags::bitflags;
-use regex::Regex;
 
 use crate::lines::SafeLines;
-use crate::matching::SimplifiedCaptures;
+use crate::matchers::common::SnippetMatchResult;
+use crate::matchers::factory::try_spawn_matchers;
 use crate::snippets::SnippetStorage;
-
-// XXX: is position (second number after path) mandatory?
-// Note: the regex ensures line number fits into any 32 bit integer
-static COMPILER_WARNING_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r"^(.*\.(?:c|cc|cxx|cpp|cc|h|hh|hpp|hxx)):([0-9]{1,9}):[0-9]+: (warning: .* \[(-W.*)\])$",
-    )
-    .unwrap()
-});
-
-static PYTEST_FAILED_TEST_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^([^:]+)::([^ ]+) FAILED +\[[0-9 ]{3}%\]$").unwrap());
-
-static CATCH_FAILED_TEST_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[0-9]+/[0-9]+ Test #[0-9]+: ([^ ]+) \.+\*\*\*(Failed|Exception)").unwrap()
-});
-
-static GTEST_FAILED_TEST_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\[  FAILED  \] ([^ ]+) \([0-9]+ ms\)$").unwrap());
 
 bitflags! {
     #[derive(Debug, Default, PartialEq, Eq)]
@@ -91,6 +72,7 @@ impl LogParser {
     pub fn parse(&self, reader: impl BufRead) -> std::io::Result<LogParseReport> {
         let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut res = LogParseReport::default();
+        let mut current_matchers = vec![];
 
         for line in lines {
             let line = line?;
@@ -115,75 +97,21 @@ impl LogParser {
 
             let line = strip_ansi_escapes::strip_str(line.string);
 
-            if let Some(r#match) = COMPILER_WARNING_REGEX.captures(&line) {
-                let snippet = snippets::CompilerWarning {
-                    path: r#match.get_any(1),
-                    line_number: r#match.get_any(2),
-                    category: r#match.get_any(4),
-                    message: r#match.get_any(3),
-                };
+            current_matchers.extend(try_spawn_matchers(&line));
 
-                {
-                    let snippets = res.snippets.get_mut();
-                    if self
-                        .max_snippets_per_kind
-                        .is_some_and(|n| snippets.len() >= n)
+            current_matchers.retain_mut(|matcher| match matcher.match_line(&line) {
+                SnippetMatchResult::NoMatch => false,
+                SnippetMatchResult::Complete(snippet) => {
+                    if !res
+                        .snippets
+                        .push_with_limit(snippet, self.max_snippets_per_kind)
                     {
                         res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    } else {
-                        snippets.push(snippet);
                     }
+                    false
                 }
-            } else if let Some(r#match) = PYTEST_FAILED_TEST_REGEX.captures(&line) {
-                let snippet = snippets::PytestFailedTest {
-                    path: r#match.get_any(1),
-                    rest_of_nodeid: r#match.get_any(2),
-                };
-
-                {
-                    let snippets = res.snippets.get_mut();
-                    if self
-                        .max_snippets_per_kind
-                        .is_some_and(|n| snippets.len() >= n)
-                    {
-                        res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    } else {
-                        snippets.push(snippet);
-                    }
-                }
-            } else if let Some(r#match) = CATCH_FAILED_TEST_REGEX.captures(&line) {
-                let snippet = snippets::CatchFailedTest {
-                    test_name: r#match.get_any(1),
-                };
-
-                {
-                    let snippets = res.snippets.get_mut();
-                    if self
-                        .max_snippets_per_kind
-                        .is_some_and(|n| snippets.len() >= n)
-                    {
-                        res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    } else {
-                        snippets.push(snippet);
-                    }
-                }
-            } else if let Some(r#match) = GTEST_FAILED_TEST_REGEX.captures(&line) {
-                let snippet = snippets::GtestFailedTest {
-                    test_name: r#match.get_any(1),
-                };
-
-                {
-                    let snippets = res.snippets.get_mut();
-                    if self
-                        .max_snippets_per_kind
-                        .is_some_and(|n| snippets.len() >= n)
-                    {
-                        res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    } else {
-                        snippets.push(snippet);
-                    }
-                }
-            }
+                SnippetMatchResult::Continued => true,
+            });
 
             res.parsed_lines += 1;
         }
