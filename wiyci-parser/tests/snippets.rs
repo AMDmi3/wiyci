@@ -31,6 +31,18 @@ fn test_compiler_warning() {
         warning.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
+    assert_eq!(
+        warning
+            .lines
+            .iter()
+            .map(|line| line.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]",
+            "    1 | int foo() {}",
+            "      |            ^",
+        ],
+    );
 }
 
 #[test]
