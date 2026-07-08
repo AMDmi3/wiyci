@@ -20,4 +20,7 @@ where
 
 pub trait SnippetMatcher {
     fn match_line(&mut self, line: &str) -> SnippetMatchResult;
+    fn flush(&mut self) -> SnippetMatchResult {
+        SnippetMatchResult::NoMatch
+    }
 }

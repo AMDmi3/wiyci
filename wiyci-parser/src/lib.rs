@@ -113,6 +113,23 @@ impl LogParser {
             res.parsed_lines += 1;
         }
 
+        // flush remaining matchers
+        for mut matcher in current_matchers {
+            if let SnippetMatchResult::Complete(snippet) = matcher.flush() {
+                if self
+                    .max_total_snippets
+                    .is_some_and(|n| res.snippets.len() >= n)
+                {
+                    res.flags |= Flags::TOO_MANY_SNIPPETS;
+                } else if !res
+                    .snippets
+                    .push_with_limit(snippet, self.max_snippets_per_kind)
+                {
+                    res.flags |= Flags::TOO_MANY_SNIPPETS;
+                }
+            }
+        }
+
         Ok(res)
     }
 }
