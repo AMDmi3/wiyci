@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use core::ops::Range;
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -8,6 +9,8 @@ use regex::Captures;
 
 pub trait SimplifiedCaptures {
     fn get_str(&self, i: usize) -> &str;
+    #[expect(unused)]
+    fn get_range(&self, i: usize) -> Range<usize>;
     fn get_any<T>(&self, i: usize) -> T
     where
         T: FromStr,
@@ -19,6 +22,12 @@ impl SimplifiedCaptures for Captures<'_> {
         self.get(i)
             .expect("capture group presence ensured by the regex")
             .as_str()
+    }
+
+    fn get_range(&self, i: usize) -> Range<usize> {
+        self.get(i)
+            .expect("capture group presence ensured by the regex")
+            .range()
     }
 
     fn get_any<T>(&self, i: usize) -> T
