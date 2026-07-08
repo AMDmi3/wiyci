@@ -29,7 +29,7 @@ pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
 #[derive(FromRow)]
 pub struct DbLog {
     pub id: i32,
-    pub fetch_task_id: i32,
+    pub fetch_task_id: Option<i32>,
     pub created_at: OffsetDateTime,
 
     pub url: String,

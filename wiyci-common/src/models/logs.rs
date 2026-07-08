@@ -24,7 +24,7 @@ pub struct ParsedLog {
 
 pub struct Log {
     pub id: i32,
-    pub fetch_task_id: i32,
+    pub fetch_task_id: Option<i32>,
     pub created_at: OffsetDateTime,
 
     pub url: String,

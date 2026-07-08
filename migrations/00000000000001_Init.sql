@@ -39,7 +39,7 @@ CREATE UNIQUE INDEX fetch_tasks_queue_idx ON fetch_tasks(next_fetch_attempt_at, 
 CREATE TABLE logs (
 	-- metadata
 	id                    INTEGER PRIMARY KEY,
-	fetch_task_id         INTEGER NOT NULL REFERENCES fetch_tasks(id) ON DELETE SET NULL,
+	fetch_task_id         INTEGER REFERENCES fetch_tasks(id) ON DELETE SET NULL,
 	created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
 	-- identifiers
 	url                   TEXT NOT NULL,
