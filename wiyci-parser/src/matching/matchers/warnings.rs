@@ -32,13 +32,12 @@ struct Details {
 impl CompilerWarning {
     fn from_state(lines: Vec<String>, details: Details) -> Self {
         Self {
-            lines: lines,
+            lines,
             path: details.path,
             line_number: details.line_number,
             category: details.category,
             message: details.message,
         }
-        .into()
     }
 }
 
