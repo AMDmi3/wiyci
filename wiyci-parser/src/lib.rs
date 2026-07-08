@@ -17,7 +17,7 @@ use bitflags::bitflags;
 use crate::lines::SafeLines;
 use crate::matching::common::SnippetMatchResult;
 use crate::matching::factory::try_spawn_matchers;
-use crate::snippets::SnippetStorage;
+use crate::snippets::{AnySnippet, SnippetStorage};
 
 bitflags! {
     #[derive(Debug, Default, PartialEq, Eq)]
@@ -68,6 +68,23 @@ impl LogParser {
         self
     }
 
+    fn try_push_snippet(&self, snippet: AnySnippet, report: &mut LogParseReport) {
+        if self
+            .max_total_snippets
+            .is_some_and(|n| report.snippets.len() >= n)
+        {
+            report.flags |= Flags::TOO_MANY_SNIPPETS;
+            return;
+        }
+
+        if !report
+            .snippets
+            .push_with_limit(snippet, self.max_snippets_per_kind)
+        {
+            report.flags |= Flags::TOO_MANY_SNIPPETS;
+        }
+    }
+
     pub fn parse(&self, reader: impl BufRead) -> std::io::Result<LogParseReport> {
         let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut res = LogParseReport::default();
@@ -94,17 +111,7 @@ impl LogParser {
             current_matchers.retain_mut(|matcher| match matcher.match_line(&line) {
                 SnippetMatchResult::NoMatch => false,
                 SnippetMatchResult::Complete(snippet) => {
-                    if self
-                        .max_total_snippets
-                        .is_some_and(|n| res.snippets.len() >= n)
-                    {
-                        res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    } else if !res
-                        .snippets
-                        .push_with_limit(snippet, self.max_snippets_per_kind)
-                    {
-                        res.flags |= Flags::TOO_MANY_SNIPPETS;
-                    }
+                    self.try_push_snippet(snippet, &mut res);
                     false
                 }
                 SnippetMatchResult::Continued => true,
@@ -116,17 +123,7 @@ impl LogParser {
         // flush remaining matchers
         for mut matcher in current_matchers {
             if let SnippetMatchResult::Complete(snippet) = matcher.flush() {
-                if self
-                    .max_total_snippets
-                    .is_some_and(|n| res.snippets.len() >= n)
-                {
-                    res.flags |= Flags::TOO_MANY_SNIPPETS;
-                } else if !res
-                    .snippets
-                    .push_with_limit(snippet, self.max_snippets_per_kind)
-                {
-                    res.flags |= Flags::TOO_MANY_SNIPPETS;
-                }
+                self.try_push_snippet(snippet, &mut res);
             }
         }
 
