@@ -58,6 +58,7 @@ CREATE TABLE logs (
 );
 
 CREATE INDEX logs_project_idx ON logs(project_name);
+CREATE INDEX logs_fetch_task_idx ON logs(fetch_task_id);
 CREATE UNIQUE INDEX logs_parse_queue_idx ON logs(parser_version NULLS FIRST, id);
 
 CREATE TABLE snippets (
