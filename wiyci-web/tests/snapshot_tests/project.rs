@@ -9,11 +9,11 @@ use wiyci_web::create_app;
 #[sqlx::test(migrator = "wiyci_common::MIGRATOR")]
 async fn test_project_not_found(pool: PgPool) {
     let server = TestServer::new(create_app(pool).await.unwrap());
-    insta::assert_snapshot!(server.get("/project/nonexistent").await);
+    assert_snapshot!(server.get("/project/nonexistent").await);
 }
 
 #[sqlx::test(migrator = "wiyci_common::MIGRATOR", fixtures("firefox_project"))]
 async fn test_projects_existing(pool: PgPool) {
     let server = TestServer::new(create_app(pool).await.unwrap());
-    insta::assert_snapshot!(server.get("/project/firefox").await);
+    assert_snapshot!(server.get("/project/firefox").await);
 }
