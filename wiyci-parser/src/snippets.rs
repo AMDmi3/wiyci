@@ -28,7 +28,7 @@ pub struct TestResult {
 
 macro_rules! declare_snippets {
     ($($kind:ident),+ $(,)?) => {
-        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         #[non_exhaustive]
         pub enum SnippetKind {
             $($kind,)+
