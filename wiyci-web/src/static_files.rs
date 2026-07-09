@@ -15,6 +15,8 @@ static STATIC_FILES_RAW: Dir = include_dir!("$CARGO_MANIFEST_DIR/static");
 pub static STATIC_FILES: LazyLock<StaticFiles> =
     LazyLock::new(|| StaticFiles::new(&STATIC_FILES_RAW));
 
+static CSS: &str = grass::include!("wiyci-web/css/main.scss");
+
 pub struct StaticFile {
     pub name: &'static str,
     pub hashed_name: String,
@@ -45,7 +47,8 @@ impl StaticFiles {
                 } else {
                     None
                 }
-            });
+            })
+            .chain([("main.css", CSS.as_bytes())]);
 
         let files: Vec<_> = static_files_iterator
             .map(|(name, original_content)| {

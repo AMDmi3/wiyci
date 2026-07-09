@@ -1,0 +1,223 @@
+@use "colors" as *;
+@use "sass:color";
+
+body {
+	margin: 0;
+	padding: 0;
+	color: light-dark($zinc-750, $zinc-200);
+	background-color: light-dark($white, #{color.mix($slate-950, $slate-900)});
+	font-family: system-ui,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Helvetica,Arial,Helvetica Neue,sans-serif;
+	overflow-wrap: break-word;
+	box-sizing: border-box;
+	line-height: 1.5;
+
+	// from picocss, but one step smaller
+	@media (min-width: 768px) { font-size: 106.25%; }
+	@media (min-width: 1024px) { font-size: 112.5%; }
+	@media (min-width: 1216px) { font-size: 118.75%; }
+	@media (min-width: 1408px) { font-size: 125%; }
+
+	// for sticky footer
+	display: flex;
+	flex-direction: column;
+	min-height: 100dvh;
+}
+
+img {
+	display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0 0 1rem 0;
+	font-weight: 700;
+}
+
+h1 {
+	font-size: 2rem;
+	line-height: 1.125;
+	color: light-dark($zinc-800, $zinc-50);
+}
+
+h2 {
+	font-size: 1.75rem;
+	line-height: 1.15;
+	color: light-dark($zinc-750, $zinc-100);
+}
+
+h3 {
+	font-size: 1.5rem;
+	line-height: 1.175;
+	color: light-dark($zinc-700, $zinc-200);
+}
+
+h4 {
+	font-size: 1.25rem;
+	line-height: 1.2;
+	color: light-dark($zinc-650, $zinc-250);
+}
+
+h5 {
+	font-size: 1.125rem;
+	line-height: 1.225;
+	color: light-dark($zinc-600, $zinc-300);
+}
+
+h6 {
+	font-size: 1rem;
+	line-height: 1.25;
+	color: light-dark($zinc-550, $zinc-400);
+}
+
+a:link, a:visited {
+	color: light-dark($azure-550, $azure-350);
+}
+
+// container
+
+.container {
+	margin: 0 auto;
+	padding: 0 1rem;
+}
+
+.container {
+	// breaks are from bulma
+	@media (min-width: 1024px) { max-width: 960px; }
+	@media (min-width: 1216px) { max-width: 1152px; }
+	@media (min-width: 1408px) { max-width: 1344px; }
+}
+
+// header
+
+.header {
+	background-color: light-dark($zinc-50, $slate-850);
+	border-bottom: 1px solid light-dark($zinc-100, $slate-800);
+}
+
+.header a:link, .header a:visited {
+	text-decoration: none;
+	color: light-dark($zinc-550, $zinc-350);
+}
+
+.header a:hover {
+	color: light-dark($zinc-900, $zinc-100);
+}
+
+.header .is-active {
+	background-color: light-dark($zinc-150, $slate-750);
+}
+
+// other landmarks
+
+.main {
+	flex-grow: 1;
+	margin: 1rem 0;
+}
+
+.footer {
+	flex-shrink: 0;
+	background-color: light-dark($zinc-50, $slate-850);
+	padding: 1rem 0;
+}
+
+// navbar
+
+.navbar {
+	display: flex;
+	gap: 1rem;
+}
+
+.navbar-brand {
+	flex-shrink: 1;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.navbar-menu {
+	flex-grow: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.navbar-menu.is-right {
+	justify-content: flex-end;
+}
+
+.navbar-item {
+	display: inline-grid;
+	place-items: center;
+	margin: 0;
+	padding: 0.75rem 0.5rem;
+}
+
+// columns
+
+.columns {
+	display: flex;
+}
+
+.columns.is-same-width > .column {
+	flex: 1;
+}
+
+.columns.is-auto-width > .column {
+	flex-grow: 1;
+}
+
+.column.is-center {
+	text-align: center;
+}
+
+.column.is-right {
+	text-align: right;
+}
+
+// table
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	text-indent: 0;
+	@media (width < 768px) { width: 100%; }
+}
+
+table.is-wide {
+	width: 100%;
+}
+
+th, td {
+	padding: 0.5rem 0.5rem;
+	border-bottom: 0.0625rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
+	text-align: left;
+}
+
+th.is-left, td.is-left {
+	text-align: left;
+}
+
+th.is-center, td.is-center {
+	text-align: center;
+}
+
+th.is-right, td.is-right {
+	text-align: right;
+}
+
+thead, tfoot {
+	th, td {
+		border-bottom: 0.1875rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
+		font-weight: 600;
+	}
+}
+
+// helper classes
+
+.hide-on-mobile {
+	@media screen and (width < 576px) { display: none; }
+}

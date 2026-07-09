@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1315
+content-length: 1309
 
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +15,7 @@ content-length: 1315
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>wiyci</title>
-	<link rel="stylesheet" href="/static/amdmi3.min.[     hash     ].css">
+	<link rel="stylesheet" href="/static/main.[     hash     ].css">
 </head>
 <body>
 

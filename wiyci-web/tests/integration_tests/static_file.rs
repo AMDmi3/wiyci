@@ -13,10 +13,23 @@ async fn test_nonexistent(pool: PgPool) {
     response.assert_status_not_found();
 }
 
+/*
+// TODO: no static files yet, enable after adding some
+#[sqlx::test(migrator = "wiyci_common::MIGRATOR")]
+async fn test_static(pool: PgPool) {
+    let server = TestServer::new(create_app(pool).await.unwrap());
+    let response = server.get("/static/???").await;
+    response.assert_status_ok();
+    response.assert_header("content-type", "text/css");
+    response.assert_text_contains("light-dark");
+    assert!(response.text().len() > 1000);
+}
+*/
+
 #[sqlx::test(migrator = "wiyci_common::MIGRATOR")]
 async fn test_css(pool: PgPool) {
     let server = TestServer::new(create_app(pool).await.unwrap());
-    let response = server.get("/static/amdmi3.min.css").await;
+    let response = server.get("/static/main.css").await;
     response.assert_status_ok();
     response.assert_header("content-type", "text/css");
     response.assert_text_contains("light-dark");
