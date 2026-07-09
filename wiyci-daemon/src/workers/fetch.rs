@@ -40,6 +40,8 @@ pub struct FetchLogsWorker {
 
 #[derive(Debug)]
 enum FetchReject {
+    RequestFailed(reqwest_middleware::Error),
+    StoreFailed(std::io::Error),
     BadHttpCode(StatusCode),
     BadContentType(String),
     ZeroSize,
@@ -48,6 +50,9 @@ enum FetchReject {
 impl std::fmt::Display for FetchReject {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::RequestFailed(error) if error.is_timeout() => write!(f, "timeout"),
+            Self::RequestFailed(error) => write!(f, "{error}"),
+            Self::StoreFailed(error) => write!(f, "{error}"),
             Self::BadHttpCode(code) => write!(f, "bad HTTP code {}", code.as_u16()),
             Self::BadContentType(content_type) => write!(f, "bad MIME type {content_type}"),
             Self::ZeroSize => write!(f, "zero size response"),
@@ -73,7 +78,11 @@ impl FetchLogsWorker {
         &self,
         fetch_task: &FetchTask,
     ) -> anyhow::Result<FetchStatus<NewLog>> {
-        let response = self.client.get(&fetch_task.url).send().await?;
+        let response = match self.client.get(&fetch_task.url).send().await {
+            Ok(response) => response,
+            Err(error) => return Ok(FetchStatus::Reject(FetchReject::RequestFailed(error))),
+        };
+
         if response.status() != StatusCode::OK {
             return Ok(FetchStatus::Reject(FetchReject::BadHttpCode(
                 response.status(),
@@ -104,10 +113,11 @@ impl FetchLogsWorker {
 
         let mut file = tokio::fs::File::from_std(self.storage.create(fetch_task.id as u64)?);
 
-        let size = tokio::io::copy(&mut reader, &mut file).await?;
-        if size == 0 {
-            return Ok(FetchStatus::Reject(FetchReject::ZeroSize));
-        }
+        let size = match tokio::io::copy(&mut reader, &mut file).await {
+            Err(error) => return Ok(FetchStatus::Reject(FetchReject::StoreFailed(error))),
+            Ok(0) => return Ok(FetchStatus::Reject(FetchReject::ZeroSize)),
+            Ok(size) => size,
+        };
 
         file.sync_all().await?;
 
