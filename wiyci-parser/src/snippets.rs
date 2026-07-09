@@ -3,9 +3,6 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-use strum::EnumString;
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
     pub lines: Vec<String>,
@@ -31,7 +28,7 @@ pub struct TestResult {
 
 macro_rules! declare_snippets {
     ($($kind:ident),+ $(,)?) => {
-        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize, EnumString)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
         #[non_exhaustive]
         pub enum SnippetKind {
             $($kind,)+

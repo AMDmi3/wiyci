@@ -4357,9 +4357,7 @@ dependencies = [
  "memchr",
  "paste",
  "regex",
- "serde",
  "strip-ansi-escapes",
- "strum",
 ]
 
 [[package]]
