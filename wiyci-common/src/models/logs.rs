@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use time::OffsetDateTime;
 
-use wiyci_parser::snippets::SnippetKind;
+use crate::models::snippets::SnippetKind;
 
 pub struct NewLog {
     pub id: i32,

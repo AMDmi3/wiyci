@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::collections::HashMap;
 use std::io::BufReader;
 use std::time::{Duration, Instant};
 
@@ -10,6 +11,8 @@ use tracing::{debug, error, info};
 
 use wiyci_common::db;
 use wiyci_common::models::logs::{Log, ParsedLog};
+use wiyci_common::models::snippets::{NewSnippet, SnippetKind};
+use wiyci_parser::snippets::{CompilerWarning, TestOutcome, TestResult};
 use wiyci_parser::{LogParseReport, LogParser};
 
 use crate::storage::LogStorage;
@@ -40,16 +43,43 @@ impl ParseLogsWorker {
             .await??
         };
 
+        let mut snippets: Vec<NewSnippet> = vec![];
+
+        for snippet in report.snippets.get::<CompilerWarning>() {
+            snippets.push(NewSnippet {
+                kind: SnippetKind::CompilerWarning,
+                text: snippet.lines.join("\n"),
+            });
+        }
+        for snippet in report.snippets.get::<TestResult>() {
+            if snippet.outcome == TestOutcome::Failed {
+                snippets.push(NewSnippet {
+                    kind: SnippetKind::FailedTest,
+                    text: snippet.lines.join("\n"),
+                });
+            }
+        }
+
+        let mut snippet_counts: HashMap<SnippetKind, u64> = Default::default();
+        for snippet in &snippets {
+            *snippet_counts.entry(snippet.kind).or_default() += 1;
+        }
+        for (kind, count) in &snippet_counts {
+            let kind: &'static str = kind.into();
+            counter!("wiyci_daemon_log_parsed_snippets_total", "kind" => kind).increment(*count);
+        }
+
         let parsed = ParsedLog {
             parser_version: LogParser::VERSION,
             parsed_num_lines: report.parsed_lines as u32,
-            parsed_snippet_counts: report.snippets.counts_per_kind(),
+            parsed_snippet_counts: snippet_counts,
         };
-
-        db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;
 
         counter!("wiyci_daemon_log_parsed_lines_total").increment(report.parsed_lines);
         counter!("wiyci_daemon_log_parses_total", "type" => if log.parser_version.is_none() { "first" } else { "reparse" }).increment(1);
+
+        db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;
+        db::snippets::replace_for_log(&self.pool, log.id, &snippets).await?;
 
         Ok(())
     }

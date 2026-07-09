@@ -5,3 +5,4 @@ pub mod fetch_tasks;
 pub mod logs;
 pub mod projects;
 pub mod repology;
+pub mod snippets;
