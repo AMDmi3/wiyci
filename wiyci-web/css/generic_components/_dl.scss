@@ -3,13 +3,15 @@
 dl {
 	display: grid;
 	grid-template-columns: auto 1fr;
-	gap: 0 1em;
+	gap: 0 .5em;
 	margin: 0;
 }
 
 dt {
 	color: $dim-fg;
 	text-align: right;
+	font-size: smaller;
+	align-self: center;
 }
 
 dd {
