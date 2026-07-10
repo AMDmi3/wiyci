@@ -4476,6 +4476,7 @@ dependencies = [
  "futures-util",
  "http",
  "indoc",
+ "libversion",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-process",

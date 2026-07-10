@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use metrics::{counter, histogram};
 use sqlx::PgPool;
 use time::OffsetDateTime;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 use wiyci_common::api;
 use wiyci_common::db;
@@ -40,7 +40,13 @@ impl UpdateProjectsWorker {
         let repology_packages =
             api::repology::fetch_project_packages(self.client.as_ref(), &project.name).await?;
 
-        let tasks = tasks::generate_tasks(&repology_packages);
+        let tasks = match tasks::generate_tasks(&repology_packages) {
+            Ok(tasks) => tasks,
+            Err(error) => {
+                warn!(%error, "failed to generate tasks");
+                Default::default()
+            }
+        };
 
         let update_period = if tasks.is_empty() {
             INACTIVE_PROJECT_UPDATE_PERIOD
