@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1179
+content-length: 1171
 
 <!DOCTYPE html>
 <html lang="en">
@@ -37,7 +37,7 @@ content-length: 1179
 
 
 <p>
-	Known since 1970-01-01, discovered via <a href="https://repology.org/project/firefox">repology</a>.
+	Known since 1970-01-01, see on <a href="https://repology.org/project/firefox">repology</a>.
 </p>
 
 
