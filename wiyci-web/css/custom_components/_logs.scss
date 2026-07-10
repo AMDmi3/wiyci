@@ -6,8 +6,7 @@
 
 	grid-template-columns: auto;
 	@media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
-	@media (min-width: 1024px) { grid-template-columns: 1fr 1fr 1fr; }
-	@media (min-width: 1408px) { grid-template-columns: 1fr 1fr 1fr 1fr; }
+	@media (min-width: 1216px) { grid-template-columns: 1fr 1fr 1fr; }
 }
 
 .log-panel {
@@ -17,6 +16,8 @@
     overflow: hidden;
 	background-color: $panel-bg-default;
 	border-radius: .5rem;
+	overflow-wrap: break-word;
+	text-wrap: balance;
 }
 
 .log-panel__header {

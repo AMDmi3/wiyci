@@ -24,7 +24,7 @@
 			<div class="is-right"><a title="Note: content at this location may have been changed or removed" href="{{ log.url }}">source</a></div>
 		</div>
 		<div class="log-panel__section">
-			<dl>
+			<dl class="dl--condensed-within">
 				{%- if let Some(last_modified) = log.last_modified %}
 				<dt>Date</dt>
 				<dd>{{ last_modified.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
@@ -34,14 +34,15 @@
 				<dd>{{ log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
 
 				<dt>Package</dt>
-				<dd>
+				{%- let long = log.binary_pkgname.as_deref().unwrap_or_default().len() > 20 || log.source_pkgname.as_deref().unwrap_or_default().len() > 20 %}
+				<dd{% if long %} class="dd--smaller"{% endif %}>
 					{%- let both = log.binary_pkgname.is_some() && log.source_pkgname.is_some() %}
 					{%- let same = log.binary_pkgname == log.source_pkgname %}
 					{%- if let Some(binary_pkgname) = log.binary_pkgname %}
 						{{- binary_pkgname }}
 					{%- endif %}
 					{%- if let Some(source_pkgname) = log.source_pkgname && !same %}
-						{%- if both %} <wbr>({% endif %}
+						{%- if both %}{% if long %}<br>{% else %} {% endif %}({% endif %}
 						{{- source_pkgname }}
 						{%- if both %}){% endif %}
 					{%- endif %}
