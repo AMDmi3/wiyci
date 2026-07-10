@@ -8,23 +8,32 @@ use wiyci_common::models::repology::RepologyPackage;
 
 const ARCHES: &[&str] = &["aarch64", "i686", "ppc64le", "s390x", "x86_64"];
 
+fn extract_version_revision(raw_version: &str) -> Option<(&str, &str)> {
+    raw_version
+        .split_once(':')
+        .map(|(_, version)| version)
+        .unwrap_or(raw_version)
+        .rsplit_once('-')
+}
+
 pub fn generate_tasks<C>(package: &RepologyPackage, tasks: &mut C) -> anyhow::Result<()>
 where
     C: Extend<NewFetchTask>,
 {
-    let version = package.origversion.as_ref().unwrap_or(&package.version);
+    let raw_version = package.origversion.as_ref().unwrap_or(&package.version);
 
     let Some(srcname) = &package.srcname else {
         bail!("no srcname");
     };
 
     for &arch in ARCHES {
+        let Some((version, revision)) = extract_version_revision(raw_version) else {
+            bail!("invalid version format");
+        };
+
         tasks.extend(std::iter::once(NewFetchTask {
             url: format!(
-                "https://kojipkgs.fedoraproject.org/packages/{}/{}/data/logs/{}/build.log",
-                srcname,
-                version.replace('-', "/"),
-                arch
+                "https://kojipkgs.fedoraproject.org/packages/{srcname}/{version}/{revision}/data/logs/{arch}/build.log",
             ),
             variant: format!("Fedora {}", arch),
             version: package.version.clone(),
