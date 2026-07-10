@@ -7,11 +7,11 @@
 <p>No projects found</p>
 {% else %}
 <ul>
+	{%- for project in projects %}
 	<li>
-		{%- for project in projects %}
 		<a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a>
-        {%- endfor %}
-    </li>
+	</li>
+	{%- endfor %}
 </ul>
 {% endif %}
 
