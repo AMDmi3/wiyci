@@ -48,7 +48,13 @@
 
 				{%- if log.counts.has_tests() %}
 				<dt>Tests</dt>
-				<dd>{{ log.counts.passed_tests }} + {{ log.counts.skipped_tests }} + {{ log.counts.failed_tests }}</dd>
+				<dd>
+					<span class="tests-counter tests-counter--passed" title="passed tests">{{ log.counts.passed_tests }}</span>
+					{{- "+" -}}
+					<span class="tests-counter tests-counter--skipped" title="skipped tests">{{ log.counts.skipped_tests }}</span>
+					{{- "+" -}}
+					<span class="tests-counter tests-counter--failed" title="failed tests">{{ log.counts.failed_tests }}</span>
+				</dd>
 				{%- endif %}
 			</dl>
 		</div>

@@ -59,3 +59,20 @@
 .log-panel--failure .log-panel__header {
 	background-color: $accent-bg-failure;
 }
+
+.tests-counter {
+	border-radius: .25rem;
+	padding: 0 .25rem;
+}
+
+.tests-counter--passed {
+	background-color: $accent-bg-success;
+}
+
+.tests-counter--skipped {
+	background-color: $accent-bg-default;
+}
+
+.tests-counter--failed {
+	background-color: $accent-bg-failure;
+}
