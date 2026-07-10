@@ -6,7 +6,43 @@ use tracing::info;
 
 use wiyci_common::db::projects;
 
-static DEFAULT_PROJECTS: &[&str] = &["kio"];
+// https://repology.org/projects/?families=57- + some manual additions
+static DEFAULT_PROJECTS: &[&str] = &[
+    "binutils",
+    "bzip2",
+    "cmake",
+    "curl",
+    "expat",
+    "ffmpeg",
+    "file",
+    "flac",
+    "gcc",
+    "glib",
+    "gmp",
+    "gperf",
+    "lame",
+    "libffi",
+    "libpng",
+    "libwebp",
+    "libxml2",
+    "libxslt",
+    "lua",
+    "m4",
+    "make",
+    "nano",
+    "openssh",
+    "openssl",
+    "pcre2",
+    "protobuf",
+    "python",
+    "python:pillow", // for failing pytest tests
+    "sdl2",
+    "sed",
+    "sqlite",
+    "vim",
+    "xz",
+    "zstd",
+];
 
 pub struct DiscoverProjectsWorker {
     pool: PgPool,
