@@ -1,0 +1,21 @@
+@use "../colors" as *;
+@use "../theme" as *;
+
+.header {
+	@include block;
+	background-color: light-dark($zinc-50, $slate-850);
+	border-bottom: 1px solid light-dark($zinc-100, $slate-800);
+}
+
+.header a:link, .header a:visited {
+	text-decoration: none;
+	color: light-dark($zinc-550, $zinc-350);
+}
+
+.header a:hover {
+	color: light-dark($zinc-900, $zinc-100);
+}
+
+.header .is-active {
+	background-color: light-dark($zinc-150, $slate-750);
+}

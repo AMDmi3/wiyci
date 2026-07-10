@@ -1,0 +1,8 @@
+@use "../colors" as *;
+@use "../theme" as *;
+
+.footer {
+	@include block;
+	background-color: light-dark($zinc-50, $slate-850);
+	padding: 1rem 0;
+}

@@ -1,0 +1,38 @@
+@use "../colors" as *;
+@use "sass:color";
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	text-indent: 0;
+	@media (width < 768px) { width: 100%; }
+}
+
+table.is-wide {
+	width: 100%;
+}
+
+th, td {
+	padding: 0.5rem 0.5rem;
+	border-bottom: 0.0625rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
+	text-align: left;
+}
+
+th.is-left, td.is-left {
+	text-align: left;
+}
+
+th.is-center, td.is-center {
+	text-align: center;
+}
+
+th.is-right, td.is-right {
+	text-align: right;
+}
+
+thead, tfoot {
+	th, td {
+		border-bottom: 0.1875rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
+		font-weight: 600;
+	}
+}

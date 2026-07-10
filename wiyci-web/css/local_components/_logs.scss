@@ -1,0 +1,61 @@
+@use "../theme" as *;
+
+.logs-grid {
+	display: grid;
+	gap: 1rem;
+
+	grid-template-columns: auto;
+	@media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
+	@media (min-width: 1024px) { grid-template-columns: 1fr 1fr 1fr; }
+	@media (min-width: 1408px) { grid-template-columns: 1fr 1fr 1fr 1fr; }
+}
+
+.log-panel {
+	@include block;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+	background-color: $panel-bg-default;
+	border-radius: .5rem;
+}
+
+.log-panel__header {
+    padding: 0.5rem;
+	background-color: $accent-bg-default;
+}
+
+.log-panel h3 {
+	margin: 0;
+	font-size: inherit;
+	font-weight: bold;
+	line-height: inherit;
+	color: $main-fg;
+}
+
+.log-panel__section {
+    padding: .5rem;
+}
+
+.log-panel--success {
+	background-color: $panel-bg-success;
+}
+
+.log-panel--warning {
+	background-color: $panel-bg-warning;
+}
+
+.log-panel--error {
+	background-color: $panel-bg-error;
+}
+
+.log-panel--success .log-panel__header {
+	background-color: $accent-bg-success;
+}
+
+.log-panel--warning .log-panel__header {
+	background-color: $accent-bg-warning;
+}
+
+.log-panel--error .log-panel__header {
+	background-color: $accent-bg-error;
+}

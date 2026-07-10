@@ -1,0 +1,23 @@
+.columns {
+	display: flex;
+}
+
+.columns--equal > * {
+	flex: 1;
+}
+
+.columns--fluid > * {
+	flex-grow: 1;
+}
+
+.columns--justify > * {
+	flex-grow: 1;
+}
+
+.columns--justify > :not(:first-child):not(:last-child) {
+	text-align: center;
+}
+
+.columns--justify > :last-child {
+	text-align: right;
+}

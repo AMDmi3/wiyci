@@ -1,0 +1,23 @@
+@use "colors" as *;
+@use "sass:color";
+
+$panel-bg-default: light-dark($zinc-50, $zinc-850);
+$accent-bg-default: light-dark($zinc-100, $zinc-700);
+
+$panel-bg-success: light-dark(#{color.mix($zinc-50, $green-50)}, $jade-850);
+$accent-bg-success: light-dark(#{color.mix($zinc-100, $green-100)}, $jade-700);
+
+$panel-bg-warning: light-dark($amber-50, $amber-850);
+$accent-bg-warning: light-dark($amber-100, $amber-700);
+
+$panel-bg-error: light-dark($red-100, $orange-850);
+$accent-bg-error: light-dark($red-200, $orange-700);
+
+$main-fg: light-dark($zinc-750, $zinc-200);
+$main-bg: light-dark($white, #{color.mix($slate-950, $slate-900)});
+
+$dim-fg: light-dark($zinc-600, $zinc-300);
+
+@mixin block {
+	box-shadow: 0 .1rem .2rem #0000001e, 0 .1rem .2rem #0000003c;
+}

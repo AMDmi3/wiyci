@@ -1,0 +1,21 @@
+:root {
+    color-scheme: light dark;
+}
+
+*, ::before, ::after {
+	box-sizing: border-box;
+}
+
+:where(:root) {
+	line-height: 1.5;
+	overflow-wrap: break-word;
+}
+
+:where(body, dd, dt) {
+	margin: 0;
+	padding: 0;
+}
+
+img, svg {
+    display: block;
+}

@@ -1,0 +1,29 @@
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100dvh;
+}
+
+.header {
+}
+
+.main {
+	margin: 1rem 0;
+	flex-grow: 1;
+}
+
+.footer {
+	flex-shrink: 0;
+}
+
+.container {
+	margin: 0 auto;
+	padding: 0 1rem;
+}
+
+.container {
+	// breaks are from bulma
+	@media (min-width: 1024px) { max-width: 960px; }
+	@media (min-width: 1216px) { max-width: 1152px; }
+	@media (min-width: 1408px) { max-width: 1344px; }
+}

@@ -8,29 +8,40 @@
 </p>
 
 {% for section in sections %}
-<h2>Version {{ section.version }}</h2>
-<section>
-	<ul>
-		{% for log in section.logs %}
-		<li>
-			{% let fetched = log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() %}
-			{% if let Some(last_modified) = log.last_modified %}
-				{{ last_modified.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }} (fetched {{ fetched }})
-			{% else %}
-				fetched {{ fetched }}
-			{% endif %}
-			{{ log.variant }}
-			: {{ log.size}} bytes, {{ log.parsed_num_lines.unwrap_or_default() }} lines
-			{% if let Some(snippet_counts) = log.parsed_snippet_counts %}
-				{% if let Some(num_warnings) = snippet_counts.get(&wiyci_common::models::snippets::SnippetKind::CompilerWarning) && **num_warnings > 0 %}
-					, warnings: {{ num_warnings }}
-				{% endif %}
-			{% endif %}
-			(<a href="{{ log.url }}">original log</a>)
-		</li>
-		{% endfor %}
-	</ul>
-<section>
+<h2>{{ section.version }}</h2>
+<div class="logs-grid">
+	{%- for log in section.logs %}
+	<div class="log-panel log-panel--default">
+		<div class="log-panel__header columns columns--justify">
+			<div><h3>{{ log.variant }}</h3></div>
+			<div class="is-right"><a title="Note: content at this location may have been changed or removed" href="{{ log.url }}">source</a></div>
+		</div>
+		<div class="log-panel__section">
+			<dl>
+				{%- if let Some(last_modified) = log.last_modified %}
+				<dt>Date</dt>
+				<dd>{{ last_modified.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
+				{%- endif %}
+
+				<dt>Fetched</dt>
+				<dd>{{ log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
+
+				{%- if let Some(parsed_num_lines) = log.parsed_num_lines %}
+				<dt>Lines</dt>
+				<dd>{{ parsed_num_lines }}</dd>
+				{%- endif %}
+
+				{%- if let Some(snippet_counts) = log.parsed_snippet_counts %}
+					{%- if let Some(num_warnings) = snippet_counts.get(&wiyci_common::models::snippets::SnippetKind::CompilerWarning) && **num_warnings > 0 %}
+					<dt>Warnings</dt>
+					<dd>{{ num_warnings }}</dd>
+					{%- endif %}
+				{%- endif %}
+			</dl>
+		</div>
+	</div>
+	{% endfor %}
+</div>
 {% endfor %}
 
 {% endblock content %}

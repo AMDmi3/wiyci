@@ -1,0 +1,16 @@
+@use "../theme" as *;
+
+dl {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0 1em;
+	margin: 0;
+}
+
+dt {
+	color: $dim-fg;
+	text-align: right;
+}
+
+dd {
+}

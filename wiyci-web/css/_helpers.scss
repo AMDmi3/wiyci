@@ -1,0 +1,11 @@
+.hide-on-mobile {
+	@media screen and (width < 576px) { display: none; }
+}
+
+.is-center {
+	text-align: center;
+}
+
+.is-right {
+	text-align: right;
+}
