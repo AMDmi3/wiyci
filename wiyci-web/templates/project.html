@@ -11,7 +11,14 @@
 <h2>{{ section.version }}</h2>
 <div class="logs-grid">
 	{%- for log in section.logs %}
-	<div class="log-panel log-panel--default">
+	<div class="log-panel log-panel--
+		{%- match log.verdict %}
+			{%- when Verdict::NotParsed %}default
+			{%- when Verdict::Success %}success
+			{%- when Verdict::Warning %}warning
+			{%- when Verdict::Failure %}failure
+		{%- endmatch -%}
+	">
 		<div class="log-panel__header columns columns--justify">
 			<div><h3>{{ log.variant }}</h3></div>
 			<div class="is-right"><a title="Note: content at this location may have been changed or removed" href="{{ log.url }}">source</a></div>
@@ -26,16 +33,22 @@
 				<dt>Fetched</dt>
 				<dd>{{ log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
 
-				{%- if let Some(parsed_num_lines) = log.parsed_num_lines %}
+				<dt>Size</dt>
+				<dd>{{ log.size }}</dd>
+
+				{%- if log.counts.lines > 0 %}
 				<dt>Lines</dt>
-				<dd>{{ parsed_num_lines }}</dd>
+				<dd>{{ log.counts.lines }}</dd>
 				{%- endif %}
 
-				{%- if let Some(snippet_counts) = log.parsed_snippet_counts %}
-					{%- if let Some(num_warnings) = snippet_counts.get(&wiyci_common::models::snippets::SnippetKind::CompilerWarning) && **num_warnings > 0 %}
-					<dt>Warnings</dt>
-					<dd>{{ num_warnings }}</dd>
-					{%- endif %}
+				{%- if log.counts.warnings > 0 %}
+				<dt>Warnings</dt>
+				<dd>{{ log.counts.warnings }}</dd>
+				{%- endif %}
+
+				{%- if log.counts.has_tests() %}
+				<dt>Tests</dt>
+				<dd>{{ log.counts.passed_tests }} + {{ log.counts.skipped_tests }} + {{ log.counts.failed_tests }}</dd>
 				{%- endif %}
 			</dl>
 		</div>
