@@ -14,7 +14,7 @@
 @use "generic_components/header";
 @use "generic_components/footer";
 @use "generic_components/headings";
-@use "local_components/logs";
+@use "custom_components/logs";
 
 body {
 	color: $main-fg;
