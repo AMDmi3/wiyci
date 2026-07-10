@@ -38,7 +38,7 @@ impl UpdateProjectsWorker {
 
     async fn update_project_inner(&self, project: &Project) -> anyhow::Result<Status> {
         let repology_packages =
-            api::repology::fetch_project_packages(self.client.as_ref(), &project.name).await?;
+            api::repology::fetch_project_packages(&self.client, &project.name).await?;
 
         let tasks = match tasks::generate_tasks(&repology_packages) {
             Ok(tasks) => tasks,

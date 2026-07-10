@@ -2681,6 +2681,7 @@ dependencies = [
  "async-trait",
  "http",
  "reqwest 0.13.4",
+ "serde",
  "thiserror",
  "tower-service",
 ]
@@ -4459,7 +4460,7 @@ name = "wiyci-common"
 version = "0.1.0"
 dependencies = [
  "indoc",
- "reqwest 0.13.4",
+ "reqwest-middleware",
  "serde",
  "sqlx",
  "strum",

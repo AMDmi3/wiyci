@@ -5,9 +5,9 @@ pub mod repology {
     use crate::models::repology::RepologyPackage;
 
     pub async fn fetch_project_packages(
-        client: &reqwest::Client,
+        client: &reqwest_middleware::ClientWithMiddleware,
         project_name: &str,
-    ) -> reqwest::Result<Vec<RepologyPackage>> {
+    ) -> reqwest_middleware::Result<Vec<RepologyPackage>> {
         let packages: Vec<RepologyPackage> = client
             .get(format!(
                 "https://repology.org/api/v1/project/{}",
