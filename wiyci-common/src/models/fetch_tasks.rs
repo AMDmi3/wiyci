@@ -9,6 +9,8 @@ pub struct NewFetchTask {
     pub url: String,
     pub version: String,
     pub variant: String,
+    pub source_pkgname: Option<String>,
+    pub binary_pkgname: Option<String>,
 }
 
 #[derive(FromRow)]
@@ -20,6 +22,8 @@ pub struct FetchTask {
     pub project_name: String,
     pub version: String,
     pub variant: String,
+    pub source_pkgname: Option<String>,
+    pub binary_pkgname: Option<String>,
 
     #[sqlx(try_from = "i32")]
     pub num_attempts: u32,

@@ -37,6 +37,8 @@ where
             ),
             variant: format!("Fedora {}", arch),
             version: package.version.clone(),
+            source_pkgname: package.srcname.clone(),
+            binary_pkgname: package.binname.clone(),
         }));
     }
 

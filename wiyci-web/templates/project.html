@@ -33,6 +33,20 @@
 				<dt>Fetched</dt>
 				<dd>{{ log.created_at.format(time::macros::format_description!("[year]-[month]-[day]")).unwrap() }}</dd>
 
+				<dt>Package</dt>
+				<dd>
+					{%- let both = log.binary_pkgname.is_some() && log.source_pkgname.is_some() %}
+					{%- let same = log.binary_pkgname == log.source_pkgname %}
+					{%- if let Some(binary_pkgname) = log.binary_pkgname %}
+						{{- binary_pkgname }}
+					{%- endif %}
+					{%- if let Some(source_pkgname) = log.source_pkgname && !same %}
+						{%- if both %} <wbr>({% endif %}
+						{{- source_pkgname }}
+						{%- if both %}){% endif %}
+					{%- endif %}
+				</dd>
+
 				<dt>Size</dt>
 				<dd>{{ log.size }}</dd>
 

@@ -40,6 +40,8 @@ where
                 .replace("{version}", version),
             variant: format!("FreeBSD {}", builder.variant),
             version: package.version.clone(),
+            source_pkgname: package.srcname.clone(),
+            binary_pkgname: package.binname.clone(),
         }));
     }
 

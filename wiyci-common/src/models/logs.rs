@@ -31,6 +31,8 @@ pub struct Log {
     pub project_name: String,
     pub version: String,
     pub variant: String,
+    pub source_pkgname: Option<String>,
+    pub binary_pkgname: Option<String>,
 
     pub size: u64,
     pub last_modified: Option<OffsetDateTime>,

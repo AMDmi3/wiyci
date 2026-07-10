@@ -68,19 +68,25 @@ pub async fn update_tasks_for_project(
 
     for task in tasks {
         sqlx::query(indoc! {"
-            INSERT INTO fetch_tasks(project_name, url, version, variant)
-                 VALUES ($1, $2, $3, $4)
+            INSERT INTO fetch_tasks(project_name, url, version, variant, source_pkgname, binary_pkgname)
+                 VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (project_name, url)
               DO UPDATE
                     SET version = EXCLUDED.version
                       , variant = EXCLUDED.variant
+                      , source_pkgname = EXCLUDED.source_pkgname
+                      , binary_pkgname = EXCLUDED.binary_pkgname
                   WHERE fetch_tasks.version IS DISTINCT FROM EXCLUDED.version
                      OR fetch_tasks.variant IS DISTINCT FROM EXCLUDED.variant
+                     OR fetch_tasks.source_pkgname IS DISTINCT FROM EXCLUDED.source_pkgname
+                     OR fetch_tasks.binary_pkgname IS DISTINCT FROM EXCLUDED.binary_pkgname
         "})
         .bind(project_name)
         .bind(&task.url)
         .bind(&task.version)
         .bind(&task.variant)
+        .bind(&task.source_pkgname)
+        .bind(&task.binary_pkgname)
         .execute(&mut *tx)
         .await?;
     }

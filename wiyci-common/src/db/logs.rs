@@ -11,8 +11,8 @@ use crate::models::logs::{Log, NewLog, ParsedLog};
 
 pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
     sqlx::query(indoc! {"
-        INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, size, last_modified, etag)
-             SELECT $1, $2, url, project_name, version, variant, $3, $4, $5
+        INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, source_pkgname, binary_pkgname, size, last_modified, etag)
+             SELECT $1, $2, url, project_name, version, variant, source_pkgname, binary_pkgname, $3, $4, $5
                FROM fetch_tasks
               WHERE id = $2
     "})
@@ -36,6 +36,8 @@ pub struct DbLog {
     pub project_name: String,
     pub version: String,
     pub variant: String,
+    pub source_pkgname: Option<String>,
+    pub binary_pkgname: Option<String>,
 
     pub size: i32,
     pub last_modified: Option<OffsetDateTime>,
@@ -58,6 +60,8 @@ impl From<DbLog> for Log {
             project_name: db.project_name,
             version: db.version,
             variant: db.variant,
+            source_pkgname: db.source_pkgname,
+            binary_pkgname: db.binary_pkgname,
 
             size: db.size as u64,
             last_modified: db.last_modified,
