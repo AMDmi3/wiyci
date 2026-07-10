@@ -10,8 +10,8 @@ $accent-bg-success: light-dark(#{color.mix($zinc-100, $green-100)}, $jade-700);
 $panel-bg-warning: light-dark($amber-50, $amber-850);
 $accent-bg-warning: light-dark($amber-100, $amber-700);
 
-$panel-bg-error: light-dark($red-100, $orange-850);
-$accent-bg-error: light-dark($red-200, $orange-700);
+$panel-bg-failure: light-dark($red-100, $orange-850);
+$accent-bg-failure: light-dark($red-200, $orange-700);
 
 $main-fg: light-dark($zinc-750, $zinc-200);
 $main-bg: light-dark($white, #{color.mix($slate-950, $slate-900)});
