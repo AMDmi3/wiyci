@@ -6,6 +6,7 @@ use anyhow::bail;
 use wiyci_common::models::fetch_tasks::NewFetchTask;
 use wiyci_common::models::repology::RepologyPackage;
 
+// XXX: Some logs (for instance, mingw-expat) can reside in noarch directory, should we add it?
 const ARCHES: &[&str] = &["aarch64", "i686", "ppc64le", "s390x", "x86_64"];
 
 fn extract_version_revision(raw_version: &str) -> Option<(&str, &str)> {
