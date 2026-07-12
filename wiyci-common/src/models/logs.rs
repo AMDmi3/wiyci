@@ -14,6 +14,7 @@ pub struct NewLog {
     pub size: u64,
     pub last_modified: Option<OffsetDateTime>,
     pub etag: Option<String>,
+    pub is_truncated: bool,
 }
 
 pub struct ParsedLog {
@@ -37,6 +38,7 @@ pub struct Log {
     pub size: u64,
     pub last_modified: Option<OffsetDateTime>,
     pub etag: Option<String>,
+    pub is_truncated: bool,
 
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<u32>,

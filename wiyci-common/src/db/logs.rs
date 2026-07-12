@@ -11,8 +11,8 @@ use crate::models::logs::{Log, NewLog, ParsedLog};
 
 pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
     sqlx::query(indoc! {"
-        INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, source_pkgname, binary_pkgname, size, last_modified, etag)
-             SELECT $1, $2, url, project_name, version, variant, source_pkgname, binary_pkgname, $3, $4, $5
+        INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, source_pkgname, binary_pkgname, size, last_modified, etag, is_truncated)
+             SELECT $1, $2, url, project_name, version, variant, source_pkgname, binary_pkgname, $3, $4, $5, $6
                FROM fetch_tasks
               WHERE id = $2
     "})
@@ -21,6 +21,7 @@ pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
     .bind(log.size as i32)
     .bind(log.last_modified)
     .bind(&log.etag)
+    .bind(log.is_truncated)
     .execute(pool)
     .await?;
     Ok(())
@@ -42,6 +43,7 @@ pub struct DbLog {
     pub size: i32,
     pub last_modified: Option<OffsetDateTime>,
     pub etag: Option<String>,
+    pub is_truncated: bool,
 
     pub parsed_at: Option<OffsetDateTime>,
     pub parser_version: Option<i32>,
@@ -66,6 +68,7 @@ impl From<DbLog> for Log {
             size: db.size as u64,
             last_modified: db.last_modified,
             etag: db.etag,
+            is_truncated: db.is_truncated,
 
             parsed_at: db.parsed_at,
             parser_version: db.parser_version.map(|v| v as u32),

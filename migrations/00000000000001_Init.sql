@@ -54,6 +54,7 @@ CREATE TABLE logs (
 	size                  INTEGER NOT NULL,
 	last_modified         TIMESTAMPTZ,
 	etag                  TEXT,
+	is_truncated          BOOLEAN NOT NULL,
 	-- from parse
 	parsed_at             TIMESTAMPTZ,
 	parser_version        INTEGER,

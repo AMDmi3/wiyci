@@ -49,7 +49,7 @@
 				</dd>
 
 				<dt>Size</dt>
-				<dd>{{ log.size }}</dd>
+				<dd>{{ log.size }}{% if log.is_truncated %} (truncated){% endif %}</dd>
 
 				{%- if log.counts.lines > 0 %}
 				<dt>Lines</dt>

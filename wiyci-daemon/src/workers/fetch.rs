@@ -9,6 +9,7 @@ use metrics::{counter, histogram};
 use sqlx::PgPool;
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc2822;
+use tokio::io::AsyncReadExt;
 use tokio_util::io::StreamReader;
 use tracing::{debug, error, info, warn};
 
@@ -23,6 +24,7 @@ const RETRY_INTERVAL: Duration = Duration::from_mins(1);
 const ITERATION_INTERVAL: Duration = Duration::from_secs(5);
 
 const MAX_ATTEMPTS: u32 = 5;
+const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
 
 fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     if num_attempts < MAX_ATTEMPTS {
@@ -109,7 +111,8 @@ impl FetchLogsWorker {
             get_header("last-modified").and_then(|s| OffsetDateTime::parse(s, &Rfc2822).ok());
 
         let stream = response.bytes_stream();
-        let mut reader = StreamReader::new(stream.map(|r| r.map_err(std::io::Error::other)));
+        let reader = StreamReader::new(stream.map(|r| r.map_err(std::io::Error::other)));
+        let mut reader = reader.take(MAX_CONTENT_SIZE);
 
         let mut file = tokio::fs::File::from_std(self.storage.create(fetch_task.id as u64)?);
 
@@ -119,6 +122,16 @@ impl FetchLogsWorker {
             Ok(size) => size,
         };
 
+        let mut is_truncated = false;
+        if size == MAX_CONTENT_SIZE {
+            let mut reader = reader.into_inner();
+            let mut probe = [0u8; 1];
+            if reader.read(&mut probe).await? > 0 {
+                is_truncated = true;
+                warn!("log is truncated at {MAX_CONTENT_SIZE}");
+            }
+        }
+
         file.sync_all().await?;
 
         Ok(FetchStatus::Success(NewLog {
@@ -127,6 +140,7 @@ impl FetchLogsWorker {
             size,
             last_modified,
             etag,
+            is_truncated,
         }))
     }
 

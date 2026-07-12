@@ -52,6 +52,7 @@ struct LogSummary {
     binary_pkgname: Option<String>,
     size: u64,
     last_modified: Option<OffsetDateTime>,
+    is_truncated: bool,
     counts: Counts,
     verdict: Verdict,
 }
@@ -95,6 +96,7 @@ impl From<Log> for LogSummary {
             binary_pkgname: log.binary_pkgname,
             size: log.size,
             last_modified: log.last_modified,
+            is_truncated: log.is_truncated,
             counts,
             verdict,
         }
