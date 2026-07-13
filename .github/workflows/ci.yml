@@ -52,10 +52,11 @@ jobs:
           psql --username postgres -c "GRANT ALL ON DATABASE wiyci TO wiyci"
       - name: Build as workspace
         run: cargo build
-      - name: Run the daemon
-        run: |
-          # only timeout is condidered success here, any early exit is a failure
-          timeout 2s cargo run --bin wiyci-daemon -- --dsn postgresql://wiyci:wiyci@localhost/wiyci && exit 1 || [ $? -eq 124 ]
+      # TODO: run in dry run mode, ensure it does not poll any sites
+      #- name: Run the daemon
+      #  run: |
+      #    # only timeout is condidered success here, any early exit is a failure
+      #    timeout 2s cargo run --bin wiyci-daemon -- --dsn postgresql://wiyci:wiyci@localhost/wiyci && exit 1 || [ $? -eq 124 ]
       - name: Run the webapp
         run: |
           # only timeout is condidered success here, any early exit is a failure
