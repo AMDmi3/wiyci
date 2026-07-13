@@ -1,4 +1,4 @@
-# World Is Your CI
+# The World Is Your CI
 
 [![CI](https://github.com/AMDmi3/wiyci/actions/workflows/ci.yml/badge.svg)](https://github.com/AMDmi3/wiyci/actions/workflows/ci.yml)
 
@@ -7,7 +7,7 @@ as an impromptu CI, reporting build failures, warnings, and failed tests.
 
 ## Requirements
 
-This code requires latest Rust-nightly.
+This project requires latest Rust-nightly to build and PostgreSQL 17+ to run.
 
 ## Running
 
