@@ -6,9 +6,9 @@
 {% if projects.is_empty() %}
 <p>No projects found</p>
 {% else %}
-<ul>
+<ul class="list list--horizontal list--blocky">
 	{%- for project in projects %}
-	<li>
+	<li class="list__item">
 		<a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a>
 	</li>
 	{%- endfor %}

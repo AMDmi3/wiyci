@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1063
+content-length: 1125
 
 <!DOCTYPE html>
 <html lang="en">
@@ -35,8 +35,8 @@ content-length: 1063
 
 
 
-<ul>
-	<li>
+<ul class="list list--horizontal list--blocky">
+	<li class="list__item">
 		<a href="/project/firefox">firefox</a>
 	</li>
 </ul>

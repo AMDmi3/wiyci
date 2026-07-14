@@ -1,0 +1,23 @@
+@use "../theme" as *;
+
+// reset
+ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+// horizontal list
+.list--horizontal {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.list--blocky > .list__item {
+	display: inline-block;
+	@include block;
+	border-radius: .5rem;
+	padding: .5rem;
+    background-color: $nav-bg;
+}
