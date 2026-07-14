@@ -4,7 +4,6 @@
 .header {
 	@include block;
 	background-color: $nav-bg;
-	border-bottom: 1px solid light-dark($zinc-100, $slate-800);
 }
 
 .header a:link, .header a:visited {
