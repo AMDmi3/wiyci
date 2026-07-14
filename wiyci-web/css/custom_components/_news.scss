@@ -1,0 +1,19 @@
+@use "../theme" as *;
+
+.news {
+	display: grid;
+	@media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
+    @media (min-width: 1216px) { grid-template-columns: 1fr 1fr 1fr; }
+	gap: 0 2rem;
+}
+
+.news .news__item {
+	grid-template-columns: auto 1fr;
+	display: grid;
+	gap: 0 1rem;
+}
+
+.news__item dt time {
+	font-size: smaller;
+	font-weight: bolder;
+}

@@ -12,9 +12,11 @@ async fn test_root(pool: PgPool) {
     let response = server.get("/").await;
     response.assert_status_ok();
     response.assert_header("content-type", "text/html; charset=utf-8");
-    assert!(
-        !tidier::Doc::new(response.text(), false)
-            .unwrap()
-            .has_issues()
-    );
+    // croaks on <div> inside <dl>, though it's valid HTML5
+    // https://html.spec.whatwg.org/multipage/grouping-content.html#the-dl-element
+    //assert!(
+    //    !tidier::Doc::new(response.text(), false)
+    //        .unwrap()
+    //        .has_issues()
+    //);
 }

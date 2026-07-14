@@ -1,0 +1,20 @@
+@use "../theme" as *;
+
+.jumbotron {
+	@include block;
+	border-radius: 1rem;
+	padding: 1rem;
+	background-color: $nav-bg;
+}
+
+.jumbotron h1 {
+	text-align: center;
+}
+
+.jumbotron > :first-child {
+	margin-top: 0;
+}
+
+.jumbotron > :last-child {
+	margin-bottom: 0;
+}

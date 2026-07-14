@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1020
+content-length: 2863
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,7 +34,31 @@ content-length: 1020
 
 
 
-<p>We collect build logs for F/OSS projects, report warnings and failed tests</p>
+<header class="jumbotron">
+	<h1>The World Is Your CI</h1>
+	<p>F/OSS projects get packaged in distributions and repositories, <strong>wiyci</strong> collects package build logs from these and present in the form of CI builds.</p>
+	<p>This can be useful to <strong>upstreams</strong> (gives an overview of downstream builders, and much wider variety of different build environments that any traditional CI would provide), <strong>contributors</strong> (easy way to find a project which need improvement), <strong>compiler developers</strong> (find cases where warnings are triggered, introduce new warning classes), <strong>platform developers</strong> (to find places to improve specific to their platform of interest).</p>
+	<p><strong>wiyci</strong> is currently in Alpha, so service capabilities are limited. But we're growing!</p>
+	<p><strong>wiyci</strong> currently supports build logs from <strong>Alpine</strong>, <strong>Fedora</strong> and <strong>FreeBSD</strong>. This already covers 2 different kernels, 2 different C libraries, and 8 hardware arhitectures. <a href="https://github.com/AMDmi3/wiyci/issues/31">Suggest</a> more sources!</p>
+	<p><strong>wiyci</strong> currently parses C/C++ compiler <strong>warnings</strong> and CTest/Google Test/PyTest <strong>test failures</strong>. <a href="https://github.com/AMDmi3/wiyci/issues/14">Suggest</a> more useful facts to parse!</p>
+	<p><strong>wiyci</strong> currently only supports a few dozen most popular projects. <a href="https://github.com/AMDmi3/wiyci/blob/master/wiyci-daemon/src/workers/discover.rs#L10">Suggest</a> a project you're really interested in!</p>
+</header>
+
+<section>
+	<h2>News</h2>
+
+	<dl class="news">
+		<div class="news__item">
+			<dt><time datetime="2026-07-??">2026-07-??</time></dt>
+			<dd>First public release</dd>
+		</div>
+	</dl>
+</section>
+
+<section>
+	<h2>Browse projects</h2>
+	<p><a href="/projects">Go to projects</a></p>
+</section>
 
 
 </div></main>
