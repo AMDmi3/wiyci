@@ -3,7 +3,7 @@
 
 .header {
 	@include block;
-	background-color: light-dark($zinc-50, $slate-850);
+	background-color: $nav-bg;
 	border-bottom: 1px solid light-dark($zinc-100, $slate-800);
 }
 
