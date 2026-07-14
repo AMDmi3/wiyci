@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1131
+content-length: 1040
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,9 +24,7 @@ content-length: 1131
 	<div class="navbar-brand">
 		<a href="/"><strong title="The World Is Your CI">wiyci</strong></a>
 	</div>
-	<ul class="navbar-menu">
-		<li class="navbar-item"><a href="/projects">Projects</a></li>
-		<li class="navbar-item is-active"><a href="/about" aria-current="true">About</a></li>
+	<ul class="navbar-menu"><li class="navbar-item"><a href="/projects">Projects</a></li>
 	</ul>
 </nav>
 </div></header>

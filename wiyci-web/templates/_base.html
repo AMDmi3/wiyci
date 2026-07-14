@@ -21,8 +21,10 @@
 		<li class="navbar-item"><a href="{{ target_route.url_for().build()? }}">{{ name }}</a></li>
 		{%- endif -%}
 		{%- endmacro %}
-		{{ navbar_link("Projects", crate::routes::Route::Projects, crate::routes::Section::Projects) }}
+		{{- navbar_link("Projects", crate::routes::Route::Projects, crate::routes::Section::Projects) }}
+		{#- <!-- page is empty for now -->
 		{{ navbar_link("About", crate::routes::Route::About, crate::routes::Section::Docs) }}
+		#}
 	</ul>
 </nav>
 </div></header>

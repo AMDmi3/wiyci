@@ -5,9 +5,11 @@
 
 <p>We collect build logs for F/OSS projects, report warnings and failed tests</p>
 
+{#- <!-- not really useful as long as the supported projects s is limited -->
 <form action="{{ crate::routes::Route::Projects.url_for().build()? }}" method="GET">
 	<input type="text" name="search" placeholder="search project name">
 	<button type="submit">Go</button>
 </form>
+#}
 
 {% endblock content %}

@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1233
+content-length: 1020
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,9 +24,7 @@ content-length: 1233
 	<div class="navbar-brand">
 		<a href="/"><strong title="The World Is Your CI">wiyci</strong></a>
 	</div>
-	<ul class="navbar-menu">
-		<li class="navbar-item"><a href="/projects">Projects</a></li>
-		<li class="navbar-item"><a href="/about">About</a></li>
+	<ul class="navbar-menu"><li class="navbar-item"><a href="/projects">Projects</a></li>
 	</ul>
 </nav>
 </div></header>
@@ -37,11 +35,6 @@ content-length: 1233
 
 
 <p>We collect build logs for F/OSS projects, report warnings and failed tests</p>
-
-<form action="/projects" method="GET">
-	<input type="text" name="search" placeholder="search project name">
-	<button type="submit">Go</button>
-</form>
 
 
 </div></main>
