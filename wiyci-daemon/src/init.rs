@@ -156,6 +156,9 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
             366.0 * 86400.0,
         ];
 
+        // 1k ..= 16M; current log size limit is 10M
+        let size_bytes_buckets: Vec<f64> = (10..=24).map(|n| 2_u64.pow(n) as f64).collect();
+
         PrometheusBuilder::new()
             .set_buckets_for_metric(
                 Matcher::Suffix("_duration_seconds".to_string()),
@@ -165,6 +168,11 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
             .set_buckets_for_metric(
                 Matcher::Suffix("_overdue_age_seconds".to_string()),
                 MINUTE_TO_YEAR_SECONDS_BUCKETS,
+            )
+            .unwrap()
+            .set_buckets_for_metric(
+                Matcher::Suffix("_size_bytes".to_string()),
+                &size_bytes_buckets,
             )
             .unwrap()
             .with_http_listener(*socket_addr)

@@ -132,6 +132,9 @@ impl FetchLogsWorker {
             }
         }
 
+        counter!("wiyci_daemon_log_fetch_fetched_bytes_total").increment(size);
+        histogram!("wiyci_daemon_log_fetch_log_size_bytes").record(size as f64);
+
         file.sync_all().await?;
 
         Ok(FetchStatus::Success(NewLog {

@@ -40,6 +40,8 @@ impl UpdateProjectsWorker {
         let repology_packages =
             api::repology::fetch_project_packages(&self.client, &project.name).await?;
 
+        // TODO: count repology traffic
+
         let tasks = tasks::generate_tasks(&repology_packages);
 
         let update_period = if tasks.is_empty() {
