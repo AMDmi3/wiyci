@@ -31,11 +31,11 @@ impl UpdateProjectsWorker {
     }
 
     async fn update_project(&self, project: &Project) -> anyhow::Result<()> {
-        let overdue_seconds = (OffsetDateTime::now_utc() - project.next_update_at)
-            .as_seconds_f64()
-            .max(0.0);
-
-        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(overdue_seconds);
+        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(
+            (OffsetDateTime::now_utc() - project.next_update_at)
+                .as_seconds_f64()
+                .max(0.0),
+        );
 
         let repology_packages =
             api::repology::fetch_project_packages(&self.client, &project.name).await?;
@@ -56,6 +56,7 @@ impl UpdateProjectsWorker {
             .await?;
 
         counter!("wiyci_daemon_project_updates_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
+        counter!("wiyci_daemon_fetch_tasks_generated_total").increment(tasks.len() as u64);
         info!(
             project_name = project.name,
             num_tasks = tasks.len(),

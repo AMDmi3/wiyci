@@ -143,6 +143,14 @@ impl FetchLogsWorker {
     }
 
     async fn fetch_log(&self, task: &FetchTask) -> anyhow::Result<()> {
+        if let Some(next_fetch_attempt_at) = task.next_fetch_attempt_at {
+            histogram!("wiyci_daemon_fetch_log_overdue_age_seconds").record(
+                (OffsetDateTime::now_utc() - next_fetch_attempt_at)
+                    .as_seconds_f64()
+                    .max(0.0),
+            );
+        }
+
         match self.fetch_and_store_log(task).await? {
             FetchStatus::Success(new_log) => {
                 db::logs::create(&self.pool, &new_log).await?;
