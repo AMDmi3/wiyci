@@ -89,7 +89,7 @@ where
                 let duration = Instant::now()
                     .saturating_duration_since(start)
                     .as_secs_f64();
-                histogram!("wiyci_daemon_worker_run_duration_total", "worker" => self.name).record(duration);
+                histogram!("wiyci_daemon_worker_run_duration_seconds", "worker" => self.name).record(duration);
 
                 match &res {
                     Err(error) => {
