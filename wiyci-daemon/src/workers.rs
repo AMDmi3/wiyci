@@ -5,6 +5,7 @@ mod discover;
 mod fetch;
 mod parse;
 mod update;
+mod util;
 
 pub use discover::*;
 pub use fetch::*;

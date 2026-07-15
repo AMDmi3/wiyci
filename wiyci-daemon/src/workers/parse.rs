@@ -3,11 +3,10 @@
 
 use std::collections::HashMap;
 use std::io::BufReader;
-use std::time::{Duration, Instant};
 
-use metrics::{counter, histogram};
+use metrics::counter;
 use sqlx::PgPool;
-use tracing::{debug, error, info};
+use tracing::info_span;
 
 use wiyci_common::db;
 use wiyci_common::models::logs::{Log, ParsedLog};
@@ -16,9 +15,7 @@ use wiyci_parser::snippets::{CompilerWarning, TestOutcome, TestResult};
 use wiyci_parser::{LogParseReport, LogParser};
 
 use crate::storage::LogStorage;
-
-const RETRY_INTERVAL: Duration = Duration::from_mins(1);
-const ITERATION_INTERVAL: Duration = Duration::from_secs(5);
+use crate::workers::util::PollingWorkerRunner;
 
 pub struct ParseLogsWorker {
     pool: PgPool,
@@ -30,7 +27,7 @@ impl ParseLogsWorker {
         Self { pool, storage }
     }
 
-    async fn parse_log_inner(&self, log: &Log) -> anyhow::Result<()> {
+    async fn parse_log(&self, log: &Log) -> anyhow::Result<()> {
         let report = {
             let id = log.id;
             let storage = self.storage.clone();
@@ -84,59 +81,15 @@ impl ParseLogsWorker {
         Ok(())
     }
 
-    #[cfg_attr(
-        not(coverage),
-        tracing::instrument(name = "parse_log", skip_all, fields(id = log.id))
-    )]
-    async fn parse_log(&self, log: &Log) -> anyhow::Result<()> {
-        let start = Instant::now();
-
-        info!("parsing log");
-
-        let res = self.parse_log_inner(log).await;
-
-        let duration_seconds = Instant::now()
-            .saturating_duration_since(start)
-            .as_secs_f64();
-
-        histogram!("wiyci_daemon_log_parse_duration_seconds").record(duration_seconds);
-
-        match &res {
-            Ok(_) => {
-                counter!("wiyci_daemon_log_parses_total", "status" => "success").increment(1);
-                info!(duration_seconds, "log parsed");
-            }
-            Err(_) => {
-                counter!("wiyci_daemon_log_parses_total", "status" => "failed").increment(1);
-            }
-        }
-        res
-    }
-
-    async fn process_next_task(&self) -> anyhow::Result<bool> {
-        let Some(log) = db::logs::get_next_for_parsing(&self.pool, LogParser::VERSION).await?
-        else {
-            return Ok(false);
-        };
-
-        self.parse_log(&log).await?;
-        Ok(true)
-    }
-
-    #[cfg_attr(not(coverage), tracing::instrument(name = "ParseLogsWorker", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "ParseLogs", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
-        loop {
-            match self.process_next_task().await {
-                Ok(true) => {}
-                Ok(false) => {
-                    debug!("waiting for tasks");
-                    tokio::time::sleep(ITERATION_INTERVAL).await;
-                }
-                Err(error) => {
-                    error!(%error, "failure in worker iteration");
-                    tokio::time::sleep(RETRY_INTERVAL).await;
-                }
-            }
-        }
+        PollingWorkerRunner::new(
+            "ParseLogs",
+            async || Ok(db::logs::get_next_for_parsing(&self.pool, LogParser::VERSION).await?),
+            async |log| self.parse_log(log).await,
+        )
+        .with_span(|log| info_span!("log", id = log.id))
+        .run()
+        .await
     }
 }

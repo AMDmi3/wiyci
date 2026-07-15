@@ -55,7 +55,7 @@ impl DiscoverProjectsWorker {
 
     #[cfg_attr(
         not(coverage),
-        tracing::instrument(name = "DiscoverProjectsWorker", skip_all)
+        tracing::instrument(name = "DiscoverProjects", skip_all)
     )]
     pub async fn run(&self) -> anyhow::Result<()> {
         for project in DEFAULT_PROJECTS {

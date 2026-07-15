@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use futures_util::StreamExt;
 use http::StatusCode;
@@ -11,7 +11,7 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc2822;
 use tokio::io::AsyncReadExt;
 use tokio_util::io::StreamReader;
-use tracing::{debug, error, info, warn};
+use tracing::{info, info_span, warn};
 
 use wiyci_common::db;
 use wiyci_common::models::fetch_tasks::FetchTask;
@@ -19,9 +19,7 @@ use wiyci_common::models::logs::NewLog;
 
 use crate::HttpClient;
 use crate::storage::LogStorage;
-
-const RETRY_INTERVAL: Duration = Duration::from_mins(1);
-const ITERATION_INTERVAL: Duration = Duration::from_secs(5);
+use crate::workers::util::PollingWorkerRunner;
 
 const MAX_ATTEMPTS: u32 = 5;
 const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
@@ -62,8 +60,8 @@ impl std::fmt::Display for FetchReject {
     }
 }
 
-enum FetchStatus<T> {
-    Success(T),
+enum FetchStatus {
+    Success(NewLog),
     Reject(FetchReject),
 }
 
@@ -76,10 +74,7 @@ impl FetchLogsWorker {
         }
     }
 
-    async fn fetch_and_store_log(
-        &self,
-        fetch_task: &FetchTask,
-    ) -> anyhow::Result<FetchStatus<NewLog>> {
+    async fn fetch_and_store_log(&self, fetch_task: &FetchTask) -> anyhow::Result<FetchStatus> {
         let response = match self.client.get(&fetch_task.url).send().await {
             Ok(response) => response,
             Err(error) => return Ok(FetchStatus::Reject(FetchReject::RequestFailed(error))),
@@ -147,12 +142,12 @@ impl FetchLogsWorker {
         }))
     }
 
-    async fn fetch_log_inner(&self, task: &FetchTask) -> anyhow::Result<FetchStatus<()>> {
+    async fn fetch_log(&self, task: &FetchTask) -> anyhow::Result<()> {
         match self.fetch_and_store_log(task).await? {
             FetchStatus::Success(new_log) => {
                 db::logs::create(&self.pool, &new_log).await?;
                 db::fetch_tasks::resolve(&self.pool, task.id, new_log.id).await?;
-                Ok(FetchStatus::Success(()))
+                info!("log fetched");
             }
             FetchStatus::Reject(reject) => {
                 db::fetch_tasks::register_failure(
@@ -162,77 +157,22 @@ impl FetchLogsWorker {
                     calc_retry_interval(task.num_attempts),
                 )
                 .await?;
-                Ok(FetchStatus::Reject(reject))
-            }
-        }
-    }
-
-    #[cfg_attr(
-        not(coverage),
-        tracing::instrument(name = "fetch_log", skip_all, fields(url = task.url))
-    )]
-    async fn fetch_log(&self, task: &FetchTask) -> anyhow::Result<()> {
-        let start = Instant::now();
-
-        let overdue_seconds = task
-            .next_fetch_attempt_at
-            .map(|next_fetch_attempt_at| {
-                (OffsetDateTime::now_utc() - next_fetch_attempt_at)
-                    .as_seconds_f64()
-                    .max(0.0)
-            })
-            .unwrap_or_default();
-
-        info!(overdue_seconds, "fetching log");
-        histogram!("wiyci_daemon_log_fetch_overdue_age_seconds").record(overdue_seconds);
-
-        let res = self.fetch_log_inner(task).await;
-
-        let duration_seconds = Instant::now()
-            .saturating_duration_since(start)
-            .as_secs_f64();
-
-        histogram!("wiyci_daemon_log_fetch_duration_seconds").record(duration_seconds);
-
-        match &res {
-            Ok(FetchStatus::Reject(reject)) => {
-                counter!("wiyci_daemon_log_fetches_total", "status" => "reject").increment(1);
                 warn!(%reject, "log fetch failed");
             }
-            Ok(_) => {
-                counter!("wiyci_daemon_log_fetches_total", "status" => "success").increment(1);
-                info!(duration_seconds, "log fetched");
-            }
-            Err(_) => {
-                counter!("wiyci_daemon_log_fetches_total", "status" => "failed").increment(1);
-            }
         }
-        res.map(|_| ())
+
+        Ok(())
     }
 
-    async fn process_next_task(&self) -> anyhow::Result<bool> {
-        let Some(task) = db::fetch_tasks::get_next_for_fetch(&self.pool).await? else {
-            return Ok(false);
-        };
-
-        self.fetch_log(&task).await?;
-        Ok(true)
-    }
-
-    #[cfg_attr(not(coverage), tracing::instrument(name = "FetchLogsWorker", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "FetchLogs", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
-        loop {
-            match self.process_next_task().await {
-                Ok(true) => {}
-                Ok(false) => {
-                    debug!("waiting for tasks");
-                    tokio::time::sleep(ITERATION_INTERVAL).await;
-                }
-                Err(error) => {
-                    error!(%error, "failure in worker iteration");
-                    tokio::time::sleep(RETRY_INTERVAL).await;
-                }
-            }
-        }
+        PollingWorkerRunner::new(
+            "FetchLogs",
+            async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool).await?),
+            async |task| self.fetch_log(task).await,
+        )
+        .with_span(|task| info_span!("task", url = task.url))
+        .run()
+        .await
     }
 }
