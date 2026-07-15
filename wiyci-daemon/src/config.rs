@@ -72,6 +72,13 @@ pub struct CliArgs {
     /// Storage for downloaded build logs
     #[arg(long)]
     storage_path: Option<PathBuf>,
+
+    /// Enable full-fledged project discovery
+    ///
+    /// Unless this is enabled, just works with a small predefined set
+    /// of projects to avoid unexpectedly fetching gigabytes of logs.
+    #[arg(long)]
+    enable_discovery: bool,
 }
 
 #[derive(Deserialize, Default)]
@@ -87,6 +94,7 @@ struct FileConfig {
     http_timeout: Option<f64>,
     http_delay: Option<f64>,
     storage_path: Option<PathBuf>,
+    enable_discovery: bool,
 }
 
 #[derive(Debug)]
@@ -100,6 +108,7 @@ pub struct Config {
     pub http_timeout: Duration,
     pub http_delay: Duration,
     pub storage_path: PathBuf,
+    pub enable_discovery: bool,
 }
 
 impl Config {
@@ -145,6 +154,7 @@ impl Config {
             storage_path: args.storage_path.or(config.storage_path).ok_or_else(|| {
                 anyhow!("missing required argument or config paramater \"storage-path\"")
             })?,
+            enable_discovery: args.enable_discovery || config.enable_discovery,
         })
     }
 }

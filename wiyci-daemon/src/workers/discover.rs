@@ -6,8 +6,12 @@ use tracing::info;
 
 use wiyci_common::db::projects;
 
+// Minimal set of projects with small ligs to fill the database unless
+// full-fledged project discovery is enabled
+static SAMPLE_PROJECTS: &[&str] = &["bzip2"];
+
 // https://repology.org/projects/?families=57- + some manual additions
-static DEFAULT_PROJECTS: &[&str] = &[
+static DISCOVERED_PROJECTS: &[&str] = &[
     "binutils",
     "bzip2",
     "cmake",
@@ -46,11 +50,15 @@ static DEFAULT_PROJECTS: &[&str] = &[
 
 pub struct DiscoverProjectsWorker {
     pool: PgPool,
+    enable_discovery: bool,
 }
 
 impl DiscoverProjectsWorker {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new(pool: PgPool, enable_discovery: bool) -> Self {
+        Self {
+            pool,
+            enable_discovery,
+        }
     }
 
     #[cfg_attr(
@@ -58,7 +66,12 @@ impl DiscoverProjectsWorker {
         tracing::instrument(name = "DiscoverProjects", skip_all)
     )]
     pub async fn run(&self) -> anyhow::Result<()> {
-        for project in DEFAULT_PROJECTS {
+        let projects = if self.enable_discovery {
+            DISCOVERED_PROJECTS
+        } else {
+            SAMPLE_PROJECTS
+        };
+        for project in projects {
             info!("adding default project {}", project);
             projects::create(&self.pool, project).await?;
         }

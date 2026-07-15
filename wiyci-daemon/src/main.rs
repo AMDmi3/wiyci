@@ -45,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     info!("running workers");
-    let discover = workers::DiscoverProjectsWorker::new(pool.clone());
+    let discover = workers::DiscoverProjectsWorker::new(pool.clone(), config.enable_discovery);
     let update = workers::UpdateProjectsWorker::new(pool.clone(), client.clone());
     let fetch = workers::FetchLogsWorker::new(pool.clone(), client.clone(), storage.clone());
     let parse = workers::ParseLogsWorker::new(pool.clone(), storage.clone());
