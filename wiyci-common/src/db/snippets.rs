@@ -54,7 +54,7 @@ impl TryFrom<DbSnippet> for Snippet {
             id: db.id,
             log_id: db.log_id,
             kind: db.kind.parse().map_err(|_| ())?,
-            text: db.text.split('\n').map(|s| s.to_string()).collect(),
+            lines: db.text.split('\n').map(|s| s.to_string()).collect(),
         })
     }
 }

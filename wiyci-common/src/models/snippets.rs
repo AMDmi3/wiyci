@@ -33,5 +33,5 @@ pub struct Snippet {
     pub id: i32,
     pub log_id: i32,
     pub kind: SnippetKind,
-    pub text: Vec<String>,
+    pub lines: Vec<String>,
 }

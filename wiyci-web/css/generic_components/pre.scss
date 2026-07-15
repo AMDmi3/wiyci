@@ -1,0 +1,10 @@
+@use "../theme" as *;
+
+pre {
+	display: block;
+	border-radius: .5rem;
+	color: $code-fg;
+	background-color: $code-bg;
+	padding: .5rem 1rem;
+	overflow: auto;
+}

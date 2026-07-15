@@ -20,7 +20,7 @@
 		{%- endmatch -%}
 	">
 		<div class="log-panel__header columns columns--justify">
-			<div><h3>{{ log.variant }}</h3></div>
+			<div><h3><a href="{{ crate::routes::Route::Snippets.url_for().path_param("id", log.id)?.build()? }}">{{ log.variant }}</a></h3></div>
 			<div class="is-right"><a title="Note: content at this location may have been changed or removed" href="{{ log.url }}">source</a></div>
 		</div>
 		<div class="log-panel__section">

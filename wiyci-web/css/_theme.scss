@@ -20,6 +20,9 @@ $dim-fg: light-dark($zinc-600, $zinc-300);
 
 $nav-bg: light-dark($zinc-50, $slate-850);
 
+$code-fg: light-dark($zinc-750, $zinc-200);
+$code-bg: light-dark($slate-100, $slate-800);
+
 @mixin block {
 	box-shadow: 0 .1rem .2rem #0000001e, 0 .1rem .2rem #0000003c;
 }

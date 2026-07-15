@@ -130,3 +130,15 @@ pub async fn list_for_project(pool: &PgPool, project_name: &str) -> sqlx::Result
     .await?;
     Ok(logs.into_iter().map(|log| log.into()).collect())
 }
+
+pub async fn get_by_id(pool: &PgPool, id: i32) -> sqlx::Result<Option<Log>> {
+    let log: Option<DbLog> = sqlx::query_as(indoc! {"
+        SELECT *
+          FROM logs
+         WHERE id = $1
+    "})
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(log.map(|log| log.into()))
+}
