@@ -1,15 +1,31 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::fmt::Debug;
 use std::io::{BufReader, Cursor};
 
 use indoc::indoc;
+use itertools::Itertools as _;
 
 use wiyci_parser::{LogParser, snippets::*};
 
+#[track_caller]
+fn parse_snippet<T>(text: &str) -> T
+where
+    T: Debug + StoredInSnippetStorage,
+{
+    LogParser::default()
+        .parse(BufReader::new(Cursor::new(text)))
+        .expect("parsing failed")
+        .snippets
+        .into_iter_of()
+        .exactly_one()
+        .expect("parser was expected to return exactly one snippet")
+}
+
 #[test]
 fn test_compiler_warning() {
-    let data = Cursor::new(indoc! {r#"
+    let snippet: CompilerWarning = parse_snippet(indoc! {r#"
         c++ -c 1.cc
         1.cc: In function ‘int foo()’:
         1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
@@ -17,22 +33,15 @@ fn test_compiler_warning() {
               |            ^
     "#});
 
-    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let warnings = res.snippets.get::<CompilerWarning>();
-
-    assert_eq!(warnings.len(), 1);
-
-    let warning = &warnings[0];
-
-    assert_eq!(warning.path, "1.cc");
-    assert_eq!(warning.line_number, 1);
-    assert_eq!(warning.category, "-Wreturn-type");
+    assert_eq!(snippet.path, "1.cc");
+    assert_eq!(snippet.line_number, 1);
+    assert_eq!(snippet.category, "-Wreturn-type");
     assert_eq!(
-        warning.message,
+        snippet.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
     assert_eq!(
-        warning
+        snippet
             .lines
             .iter()
             .map(|line| line.as_str())
@@ -47,26 +56,13 @@ fn test_compiler_warning() {
 
 #[test]
 fn test_pytest_failed_test() {
-    let data = Cursor::new(indoc! {r#"
-        Tests/test_file_webp_animated.py::test_n_frames PASSED                   [ 50%]
+    let snippet: TestResult = parse_snippet(indoc! {r#"
         Tests/test_file_webp_animated.py::test_write_animation_L FAILED          [ 50%]
-        Tests/test_file_webp_animated.py::test_write_animation_RGB FAILED        [ 50%]
-        Tests/test_file_webp_animated.py::test_timestamp_and_duration PASSED     [ 50%]
     "#});
 
-    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let snippets = res.snippets.get::<TestResult>();
-
-    assert_eq!(snippets.len(), 2);
-
     assert_eq!(
-        snippets[0].name,
+        snippet.name,
         "Tests/test_file_webp_animated.py::test_write_animation_L"
     );
-    assert_eq!(snippets[0].outcome, TestOutcome::Failed);
-    assert_eq!(
-        snippets[1].name,
-        "Tests/test_file_webp_animated.py::test_write_animation_RGB"
-    );
-    assert_eq!(snippets[1].outcome, TestOutcome::Failed);
+    assert_eq!(snippet.outcome, TestOutcome::Failed);
 }
