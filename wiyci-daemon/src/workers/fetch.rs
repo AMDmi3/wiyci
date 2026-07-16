@@ -32,7 +32,7 @@ fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     }
 }
 
-pub struct FetchLogsWorker {
+pub struct FetchWorker {
     pool: PgPool,
     client: HttpClient,
     storage: LogStorage,
@@ -65,7 +65,7 @@ enum FetchStatus {
     Reject(FetchReject),
 }
 
-impl FetchLogsWorker {
+impl FetchWorker {
     pub fn new(pool: PgPool, client: HttpClient, storage: LogStorage) -> Self {
         Self {
             pool,
@@ -127,8 +127,8 @@ impl FetchLogsWorker {
             }
         }
 
-        counter!("wiyci_daemon_log_fetch_fetched_bytes_total").increment(size);
-        histogram!("wiyci_daemon_log_fetch_log_size_bytes").record(size as f64);
+        counter!("wiyci_daemon_fetch_bytes_total").increment(size);
+        histogram!("wiyci_daemon_fetch_log_size_bytes").record(size as f64);
 
         file.sync_all().await?;
 
@@ -144,7 +144,7 @@ impl FetchLogsWorker {
 
     async fn fetch_log(&self, task: &FetchTask) -> anyhow::Result<()> {
         if let Some(next_fetch_attempt_at) = task.next_fetch_attempt_at {
-            histogram!("wiyci_daemon_fetch_log_overdue_age_seconds").record(
+            histogram!("wiyci_daemon_fetch_overdue_age_seconds").record(
                 (OffsetDateTime::now_utc() - next_fetch_attempt_at)
                     .as_seconds_f64()
                     .max(0.0),
@@ -172,10 +172,10 @@ impl FetchLogsWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "FetchLogs", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "Fetch", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "FetchLogs",
+            "Fetch",
             async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool).await?),
             async |task| self.fetch_log(task).await,
         )

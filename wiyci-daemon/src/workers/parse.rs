@@ -17,12 +17,12 @@ use wiyci_parser::{LogParseReport, LogParser};
 use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
-pub struct ParseLogsWorker {
+pub struct ParseWorker {
     pool: PgPool,
     storage: LogStorage,
 }
 
-impl ParseLogsWorker {
+impl ParseWorker {
     pub fn new(pool: PgPool, storage: LogStorage) -> Self {
         Self { pool, storage }
     }
@@ -63,7 +63,7 @@ impl ParseLogsWorker {
         }
         for (kind, count) in &snippet_counts {
             let kind: &'static str = kind.into();
-            counter!("wiyci_daemon_log_parsed_snippets_total", "kind" => kind).increment(*count);
+            counter!("wiyci_daemon_parse_snippets_total", "kind" => kind).increment(*count);
         }
 
         let parsed = ParsedLog {
@@ -72,8 +72,8 @@ impl ParseLogsWorker {
             parsed_snippet_counts: snippet_counts,
         };
 
-        counter!("wiyci_daemon_log_parsed_lines_total").increment(report.parsed_lines);
-        counter!("wiyci_daemon_log_parses_total", "type" => if log.parser_version.is_none() { "first" } else { "reparse" }).increment(1);
+        counter!("wiyci_daemon_parse_lines_total").increment(report.parsed_lines);
+        counter!("wiyci_daemon_parse_parses_total", "type" => if log.parser_version.is_none() { "first" } else { "reparse" }).increment(1);
 
         db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;
         db::snippets::replace_for_log(&self.pool, log.id, &snippets).await?;
@@ -81,10 +81,10 @@ impl ParseLogsWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "ParseLogs", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "ParseWorker", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "ParseLogs",
+            "ParseWorker",
             async || Ok(db::logs::get_next_for_parsing(&self.pool, LogParser::VERSION).await?),
             async |log| self.parse_log(log).await,
         )

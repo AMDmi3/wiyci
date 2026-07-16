@@ -48,12 +48,12 @@ static DISCOVERED_PROJECTS: &[&str] = &[
     "zstd",
 ];
 
-pub struct DiscoverProjectsWorker {
+pub struct DiscoverWorker {
     pool: PgPool,
     enable_discovery: bool,
 }
 
-impl DiscoverProjectsWorker {
+impl DiscoverWorker {
     pub fn new(pool: PgPool, enable_discovery: bool) -> Self {
         Self {
             pool,
@@ -61,10 +61,7 @@ impl DiscoverProjectsWorker {
         }
     }
 
-    #[cfg_attr(
-        not(coverage),
-        tracing::instrument(name = "DiscoverProjects", skip_all)
-    )]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "DiscoverWorker", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         let projects = if self.enable_discovery {
             DISCOVERED_PROJECTS

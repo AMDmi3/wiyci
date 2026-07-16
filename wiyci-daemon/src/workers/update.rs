@@ -20,18 +20,18 @@ use crate::workers::util::PollingWorkerRunner;
 const ACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(1);
 const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
 
-pub struct UpdateProjectsWorker {
+pub struct UpdateWorker {
     pool: PgPool,
     client: HttpClient,
 }
 
-impl UpdateProjectsWorker {
+impl UpdateWorker {
     pub fn new(pool: PgPool, client: HttpClient) -> Self {
         Self { pool, client }
     }
 
     async fn update_project(&self, project: &Project) -> anyhow::Result<()> {
-        histogram!("wiyci_daemon_project_update_overdue_age_seconds").record(
+        histogram!("wiyci_daemon_update_overdue_age_seconds").record(
             (OffsetDateTime::now_utc() - project.next_update_at)
                 .as_seconds_f64()
                 .max(0.0),
@@ -39,8 +39,6 @@ impl UpdateProjectsWorker {
 
         let repology_packages =
             api::repology::fetch_project_packages(&self.client, &project.name).await?;
-
-        // TODO: count repology traffic
 
         let tasks = tasks::generate_tasks(&repology_packages);
 
@@ -55,8 +53,8 @@ impl UpdateProjectsWorker {
         db::projects::register_update(&self.pool, &project.name, tasks.len() as u32, update_period)
             .await?;
 
-        counter!("wiyci_daemon_project_updates_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
-        counter!("wiyci_daemon_fetch_tasks_generated_total").increment(tasks.len() as u64);
+        counter!("wiyci_daemon_update_projects_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
+        counter!("wiyci_daemon_update_tasks_total").increment(tasks.len() as u64);
         info!(
             project_name = project.name,
             num_tasks = tasks.len(),
@@ -66,10 +64,10 @@ impl UpdateProjectsWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "UpdateProjects", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "UpdateWorker", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "UpdateProjects",
+            "UpdateWorker",
             async || Ok(db::projects::get_next_for_update(&self.pool).await?),
             async |project| self.update_project(project).await,
         )
