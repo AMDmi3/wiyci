@@ -127,6 +127,7 @@ impl FetchWorker {
             }
         }
 
+        counter!("wiyci_daemon_fetch_logs_total").increment(1);
         counter!("wiyci_daemon_fetch_bytes_total").increment(size);
         histogram!("wiyci_daemon_fetch_log_size_bytes").record(size as f64);
 
