@@ -6,8 +6,9 @@ macro_rules! typed_storage {
         paste::paste! {
             #[allow(unused)]
             $vis trait [<StoredIn $name>]: Sized {
-                fn get_storage(storage: &$name) -> &$container<Self>;
-                fn get_storage_mut(storage: &mut $name) -> &mut $container<Self>;
+                fn storage(storage: &$name) -> &$container<Self>;
+                fn storage_mut(storage: &mut $name) -> &mut $container<Self>;
+                fn into_storage(storage: $name) -> $container<Self>;
             }
 
             #[derive(Default)]
@@ -20,35 +21,83 @@ macro_rules! typed_storage {
 
             $(
                 impl [<StoredIn $name>] for $variant {
-                    fn get_storage(storage: &$name) -> &$container<Self> {
+                    fn storage(storage: &$name) -> &$container<Self> {
                         &storage.[<$variant:snake s>]
                     }
 
-                    fn get_storage_mut(storage: &mut $name) -> &mut $container<Self> {
+                    fn storage_mut(storage: &mut $name) -> &mut $container<Self> {
                         &mut storage.[<$variant:snake s>]
+                    }
+
+                    fn into_storage(storage: $name) -> $container<Self> {
+                        storage.[<$variant:snake s>]
                     }
                 }
             )+
 
             impl $name {
                 #[allow(unused)]
-                pub fn get<T>(&self) -> &$container<T> where T: [<StoredIn $name>] {
-                    T::get_storage(self)
+                pub fn get<T>(&self) -> &$container<T>
+                where
+                    T: [<StoredIn $name>]
+                {
+                    T::storage(self)
                 }
 
                 #[allow(unused)]
-                pub fn get_mut<T>(&mut self) -> &mut $container<T> where T: [<StoredIn $name>] {
-                    T::get_storage_mut(self)
+                pub fn get_mut<T>(&mut self) -> &mut $container<T>
+                where
+                    T: [<StoredIn $name>]
+                {
+                    T::storage_mut(self)
+                }
+
+                #[allow(unused)]
+                pub fn into_inner<T>(self) -> $container<T>
+                where
+                    T: [<StoredIn $name>]
+                {
+                    T::into_storage(self)
+                }
+
+                #[allow(unused)]
+                pub fn iter_of<'a, T>(&'a self) -> impl Iterator<Item = &'a T>
+                where
+                    T: [<StoredIn $name>] + 'a,
+                    &'a $container<T>: IntoIterator<Item = &'a T>
+                {
+                    self.get().into_iter()
+                }
+
+                #[allow(unused)]
+                pub fn iter_mut_of<'a, T>(&'a mut self) -> impl Iterator<Item = &'a mut T>
+                where
+                    T: [<StoredIn $name>] + 'a,
+                    &'a mut $container<T>: IntoIterator<Item = &'a mut T>
+                {
+                    self.get_mut().into_iter()
+                }
+
+                #[allow(unused)]
+                pub fn into_iter_of<T>(self) -> impl Iterator<Item = T>
+                where
+                    T: [<StoredIn $name>],
+                    $container<T>: IntoIterator<Item = T>
+                {
+                    self.into_inner().into_iter()
                 }
             }
 
-            impl<T> Extend<T> for $name where T: [<StoredIn $name>], $container<T>: Extend<T> {
+            impl<T> Extend<T> for $name
+            where
+                T: [<StoredIn $name>],
+                $container<T>: Extend<T>
+            {
                 fn extend <I: IntoIterator<Item=T>> (&mut self, iter: I) {
-                    T::get_storage_mut(self).extend(iter);
+                    T::storage_mut(self).extend(iter);
                 }
             }
 
-            // TODO: from_inner / into_inner
             // TODO: retain (by kind)
             // TODO: frunk interop
         }
