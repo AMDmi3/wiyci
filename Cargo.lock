@@ -4513,6 +4513,7 @@ dependencies = [
  "paste",
  "regex",
  "strip-ansi-escapes",
+ "strum",
 ]
 
 [[package]]

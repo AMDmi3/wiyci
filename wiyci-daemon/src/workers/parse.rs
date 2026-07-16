@@ -61,6 +61,11 @@ impl ParseWorker {
             .await??
         };
 
+        for (kind, count) in &report.snippets.counts_per_kind() {
+            let kind: &'static str = kind.into();
+            counter!("wiyci_daemon_parse_parsed_snippets_total", "kind" => kind).increment(*count);
+        }
+
         let snippets = self.pick_snippets(&report);
 
         let mut snippet_counts: HashMap<SnippetKind, u64> = Default::default();
@@ -69,7 +74,7 @@ impl ParseWorker {
         }
         for (kind, count) in &snippet_counts {
             let kind: &'static str = kind.into();
-            counter!("wiyci_daemon_parse_snippets_total", "kind" => kind).increment(*count);
+            counter!("wiyci_daemon_parse_used_snippets_total", "kind" => kind).increment(*count);
         }
 
         let parsed = ParsedLog {

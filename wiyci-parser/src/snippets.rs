@@ -3,6 +3,8 @@
 
 use std::collections::HashMap;
 
+use strum::IntoStaticStr;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
     pub lines: Vec<String>,
@@ -28,7 +30,7 @@ pub struct TestResult {
 
 macro_rules! declare_snippets {
     ($($kind:ident),+ $(,)?) => {
-        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, IntoStaticStr)]
         #[non_exhaustive]
         pub enum SnippetKind {
             $($kind,)+
