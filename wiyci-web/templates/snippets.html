@@ -3,9 +3,7 @@
 {% block header %}Snippets for <a href="{{ crate::routes::Route::Project.url_for().path_param("name", log.project_name)?.build()? }} ">{{ log.project_name }}</a> {{ log.version }} from {{ log.variant }}{% endblock %}
 {% block content %}
 
-<p>
-	Sourced from <a href="https://repology.org/project/{{ log.url }}">{{ log.url }}</a>.
-</p>
+<p>Sourced from <a href="https://repology.org/project/{{ log.url }}">{{ log.url }}</a>.</p>
 
 <ul>
 {% for snippet in snippets %}
