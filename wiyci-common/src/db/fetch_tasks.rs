@@ -4,16 +4,18 @@
 use std::time::Duration;
 
 use indoc::indoc;
-use sqlx::PgPool;
+use sqlx::Postgres;
 
 use crate::models::fetch_tasks::{FetchTask, NewFetchTask};
 
 pub async fn register_failure(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     id: i32,
     error: &str,
     retry_after: Option<Duration>,
 ) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         UPDATE fetch_tasks
            SET num_attempts = num_attempts + 1
@@ -25,12 +27,20 @@ pub async fn register_failure(
     .bind(id)
     .bind(error)
     .bind(retry_after)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
-pub async fn resolve(pool: &PgPool, id: i32, log_id: i32) -> sqlx::Result<()> {
+pub async fn resolve(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    id: i32,
+    log_id: i32,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         UPDATE fetch_tasks
            SET num_attempts = num_attempts + 1
@@ -41,12 +51,18 @@ pub async fn resolve(pool: &PgPool, id: i32, log_id: i32) -> sqlx::Result<()> {
     "})
     .bind(id)
     .bind(log_id)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
-pub async fn get_next_for_fetch(pool: &PgPool) -> sqlx::Result<Option<FetchTask>> {
+pub async fn get_next_for_fetch(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+) -> sqlx::Result<Option<FetchTask>> {
+    let mut tx = conn.begin().await?;
+
     let task = sqlx::query_as(indoc! {"
           SELECT *
             FROM fetch_tasks
@@ -54,17 +70,19 @@ pub async fn get_next_for_fetch(pool: &PgPool) -> sqlx::Result<Option<FetchTask>
         ORDER BY next_fetch_attempt_at, id
            LIMIT 1
     "})
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(task)
 }
 
 pub async fn update_tasks_for_project(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     project_name: &str,
     tasks: &[NewFetchTask],
 ) -> sqlx::Result<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = conn.begin().await?;
 
     for task in tasks {
         sqlx::query(indoc! {"
@@ -104,6 +122,5 @@ pub async fn update_tasks_for_project(
     .await?;
 
     tx.commit().await?;
-
     Ok(())
 }

@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use indoc::indoc;
-use sqlx::{FromRow, PgPool};
+use sqlx::{FromRow, Postgres};
 
 use crate::models::snippets::{NewSnippet, Snippet};
 
 pub async fn replace_for_log(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     log_id: i32,
     snippets: &[NewSnippet],
 ) -> sqlx::Result<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = conn.begin().await?;
 
     sqlx::query(indoc! {"
         DELETE FROM snippets
@@ -34,7 +34,6 @@ pub async fn replace_for_log(
     }
 
     tx.commit().await?;
-
     Ok(())
 }
 
@@ -59,15 +58,22 @@ impl TryFrom<DbSnippet> for Snippet {
     }
 }
 
-pub async fn list_for_log(pool: &PgPool, log_id: i32) -> sqlx::Result<Vec<Snippet>> {
+pub async fn list_for_log(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    log_id: i32,
+) -> sqlx::Result<Vec<Snippet>> {
+    let mut tx = conn.begin().await?;
+
     let snippets: Vec<DbSnippet> = sqlx::query_as(indoc! {"
         SELECT *
           FROM snippets
          WHERE log_id = $1
     "})
     .bind(log_id)
-    .fetch_all(pool)
+    .fetch_all(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(snippets
         .into_iter()
         .filter_map(|snippet| snippet.try_into().ok())

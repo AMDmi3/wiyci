@@ -4,11 +4,16 @@
 use std::time::Duration;
 
 use indoc::indoc;
-use sqlx::PgPool;
+use sqlx::Postgres;
 
 use crate::models::projects::Project;
 
-pub async fn create(pool: &PgPool, name: &str) -> sqlx::Result<()> {
+pub async fn create(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    name: &str,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         INSERT INTO projects(name)
              VALUES ($1)
@@ -16,17 +21,21 @@ pub async fn create(pool: &PgPool, name: &str) -> sqlx::Result<()> {
          DO NOTHING
     "})
     .bind(name)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
 pub async fn register_update(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     name: &str,
     num_tasks: u32,
     update_period: Duration,
 ) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         UPDATE projects
            SET last_updated_at = now()
@@ -37,24 +46,37 @@ pub async fn register_update(
     .bind(name)
     .bind(num_tasks as i32)
     .bind(update_period)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
-pub async fn get_by_name(pool: &PgPool, name: &str) -> sqlx::Result<Option<Project>> {
+pub async fn get_by_name(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    name: &str,
+) -> sqlx::Result<Option<Project>> {
+    let mut tx = conn.begin().await?;
+
     let project = sqlx::query_as(indoc! {"
         SELECT *
           FROM projects
          WHERE name = $1
     "})
     .bind(name)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(project)
 }
 
-pub async fn get_next_for_update(pool: &PgPool) -> sqlx::Result<Option<Project>> {
+pub async fn get_next_for_update(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+) -> sqlx::Result<Option<Project>> {
+    let mut tx = conn.begin().await?;
+
     let project = sqlx::query_as(indoc! {"
           SELECT *
             FROM projects
@@ -62,12 +84,19 @@ pub async fn get_next_for_update(pool: &PgPool) -> sqlx::Result<Option<Project>>
         ORDER BY next_update_at, name
            LIMIT 1
     "})
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(project)
 }
 
-pub async fn list_latest(pool: &PgPool, count: u64) -> sqlx::Result<Vec<Project>> {
+pub async fn list_latest(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    count: u64,
+) -> sqlx::Result<Vec<Project>> {
+    let mut tx = conn.begin().await?;
+
     let projects = sqlx::query_as(indoc! {"
           SELECT *
             FROM projects
@@ -75,17 +104,21 @@ pub async fn list_latest(pool: &PgPool, count: u64) -> sqlx::Result<Vec<Project>
            LIMIT $1
     "})
     .bind(count as i64)
-    .fetch_all(pool)
+    .fetch_all(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(projects)
 }
 
 pub async fn list_by_range(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     from: Option<&str>,
     to: Option<&str>,
     count: u64,
 ) -> sqlx::Result<Vec<Project>> {
+    let mut tx = conn.begin().await?;
+
     let projects = sqlx::query_as(match (from, to) {
         (Some(_), Some(_)) => indoc! {"
               SELECT *
@@ -119,8 +152,10 @@ pub async fn list_by_range(
     .bind(from)
     .bind(to)
     .bind(count as i64)
-    .fetch_all(pool)
+    .fetch_all(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(projects)
 }
 
@@ -135,10 +170,12 @@ fn escape_like(input: &str) -> String {
 }
 
 pub async fn list_by_search(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     search_term: &str,
     count: u64,
 ) -> sqlx::Result<Vec<Project>> {
+    let mut tx = conn.begin().await?;
+
     let escaped_search_term = escape_like(search_term);
 
     let projects = sqlx::query_as(indoc! {"
@@ -169,8 +206,10 @@ pub async fn list_by_search(
     .bind(search_term)
     .bind(&escaped_search_term)
     .bind(count as i64)
-    .fetch_all(pool)
+    .fetch_all(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(projects)
 }
 

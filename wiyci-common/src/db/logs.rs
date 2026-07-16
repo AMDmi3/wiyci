@@ -4,12 +4,17 @@
 use std::collections::HashMap;
 
 use indoc::indoc;
-use sqlx::{FromRow, PgPool, types::Json};
+use sqlx::{FromRow, Postgres, types::Json};
 use time::OffsetDateTime;
 
 use crate::models::logs::{Log, NewLog, ParsedLog};
 
-pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
+pub async fn create(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    log: &NewLog,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, source_pkgname, binary_pkgname, size, last_modified, etag, is_truncated)
              SELECT $1, $2, url, project_name, version, variant, source_pkgname, binary_pkgname, $3, $4, $5, $6
@@ -22,8 +27,10 @@ pub async fn create(pool: &PgPool, log: &NewLog) -> sqlx::Result<()> {
     .bind(log.last_modified)
     .bind(&log.etag)
     .bind(log.is_truncated)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
@@ -84,9 +91,11 @@ impl From<DbLog> for Log {
 }
 
 pub async fn get_next_for_parsing(
-    pool: &PgPool,
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
     current_parser_version: u32,
 ) -> sqlx::Result<Option<Log>> {
+    let mut tx = conn.begin().await?;
+
     let log: Option<DbLog> = sqlx::query_as(indoc! {r#"
           SELECT *
             FROM logs
@@ -95,12 +104,20 @@ pub async fn get_next_for_parsing(
            LIMIT 1
     "#})
     .bind(current_parser_version as i32)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(log.map(|log| log.into()))
 }
 
-pub async fn apply_parsed(pool: &PgPool, id: i32, parsed_log: &ParsedLog) -> sqlx::Result<()> {
+pub async fn apply_parsed(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    id: i32,
+    parsed_log: &ParsedLog,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
     sqlx::query(indoc! {"
         UPDATE logs
            SET parsed_at = now()
@@ -113,12 +130,19 @@ pub async fn apply_parsed(pool: &PgPool, id: i32, parsed_log: &ParsedLog) -> sql
     .bind(parsed_log.parser_version as i32)
     .bind(parsed_log.parsed_num_lines as i32)
     .bind(Json(&parsed_log.parsed_snippet_counts))
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(())
 }
 
-pub async fn list_for_project(pool: &PgPool, project_name: &str) -> sqlx::Result<Vec<Log>> {
+pub async fn list_for_project(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    project_name: &str,
+) -> sqlx::Result<Vec<Log>> {
+    let mut tx = conn.begin().await?;
+
     let logs: Vec<DbLog> = sqlx::query_as(indoc! {"
         SELECT *
           FROM logs
@@ -126,19 +150,28 @@ pub async fn list_for_project(pool: &PgPool, project_name: &str) -> sqlx::Result
            AND parser_version IS NOT NULL
     "})
     .bind(project_name)
-    .fetch_all(pool)
+    .fetch_all(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(logs.into_iter().map(|log| log.into()).collect())
 }
 
-pub async fn get_by_id(pool: &PgPool, id: i32) -> sqlx::Result<Option<Log>> {
+pub async fn get_by_id(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    id: i32,
+) -> sqlx::Result<Option<Log>> {
+    let mut tx = conn.begin().await?;
+
     let log: Option<DbLog> = sqlx::query_as(indoc! {"
         SELECT *
           FROM logs
          WHERE id = $1
     "})
     .bind(id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
+
+    tx.commit().await?;
     Ok(log.map(|log| log.into()))
 }
