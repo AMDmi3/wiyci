@@ -7,6 +7,7 @@
 mod config;
 mod init;
 mod storage;
+mod util;
 mod workers;
 
 use anyhow::Context as _;

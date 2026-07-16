@@ -15,6 +15,7 @@ use wiyci_common::db;
 use wiyci_common::models::projects::Project;
 
 use crate::HttpClient;
+use crate::util::duration::DurationExt;
 use crate::workers::util::PollingWorkerRunner;
 
 const ACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(1);
@@ -48,8 +49,9 @@ impl UpdateWorker {
         } else {
             ACTIVE_PROJECT_UPDATE_PERIOD
         };
-        let update_period =
-            update_period.mul_f64(1.0 + UPDATE_PERIOD_JITTER * rand::random::<f64>());
+        let update_period = update_period
+            .with_jitter(UPDATE_PERIOD_JITTER)
+            .trimmed_to_micros();
 
         db::fetch_tasks::update_tasks_for_project(&self.pool, &project.name, &tasks).await?;
 

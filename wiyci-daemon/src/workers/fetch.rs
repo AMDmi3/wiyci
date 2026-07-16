@@ -20,6 +20,7 @@ use wiyci_common::models::statistics::StatisticsDelta;
 
 use crate::HttpClient;
 use crate::storage::LogStorage;
+use crate::util::duration::DurationExt as _;
 use crate::workers::util::PollingWorkerRunner;
 
 const MAX_ATTEMPTS: u32 = 5;
@@ -32,10 +33,12 @@ const RETRY_PERIOD_JITTER: f64 = 0.1;
 fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     // exponentially increasing period starting at RETRY_PERIOD_BASE
     if num_attempts + 1 < MAX_ATTEMPTS {
-        Some(RETRY_PERIOD_BASE.mul_f64(
-            RETRY_PERIOD_MULTIPLIER.powi(num_attempts as i32)
-                * (1.0 + RETRY_PERIOD_JITTER * rand::random::<f64>()),
-        ))
+        Some(
+            RETRY_PERIOD_BASE
+                .mul_f64(RETRY_PERIOD_MULTIPLIER.powi(num_attempts as i32))
+                .with_jitter(RETRY_PERIOD_JITTER)
+                .trimmed_to_micros(),
+        )
     } else {
         None
     }
