@@ -16,6 +16,7 @@ use tracing::{info, info_span, warn};
 use wiyci_common::db;
 use wiyci_common::models::fetch_tasks::FetchTask;
 use wiyci_common::models::logs::NewLog;
+use wiyci_common::models::statistics::StatisticsDelta;
 
 use crate::HttpClient;
 use crate::storage::LogStorage;
@@ -156,6 +157,15 @@ impl FetchWorker {
             FetchStatus::Success(new_log) => {
                 db::logs::create(&self.pool, &new_log).await?;
                 db::fetch_tasks::resolve(&self.pool, task.id, new_log.id).await?;
+                #[expect(clippy::needless_update)]
+                db::statistics::apply_delta(
+                    &self.pool,
+                    &StatisticsDelta {
+                        stored_logs_size: new_log.size as i64,
+                        ..Default::default()
+                    },
+                )
+                .await?;
                 info!("log fetched");
             }
             FetchStatus::Reject(reject) => {
