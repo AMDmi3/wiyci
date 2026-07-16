@@ -17,13 +17,14 @@ pub async fn get(pool: &PgPool) -> sqlx::Result<Statistics> {
     Ok(statistics)
 }
 
-pub async fn apply_delta(pool: &PgPool, delta: &StatisticsDelta) -> sqlx::Result<()> {
-    sqlx::query(indoc! {"
-        UPDATE statistics
-           SET stored_logs_size = GREATEST(stored_logs_size + COALESCE($1, 0), 0)
+pub async fn apply_delta(pool: &PgPool, delta: &StatisticsDelta) -> sqlx::Result<Statistics> {
+    let statistics: Statistics = sqlx::query_as(indoc! {"
+           UPDATE statistics
+              SET stored_logs_size = GREATEST(stored_logs_size + COALESCE($1, 0), 0)
+        RETURNING *
     "})
     .bind(delta.stored_logs_size)
-    .execute(pool)
+    .fetch_one(pool)
     .await?;
-    Ok(())
+    Ok(statistics)
 }

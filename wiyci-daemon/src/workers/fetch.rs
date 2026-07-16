@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use futures_util::StreamExt;
 use http::StatusCode;
-use metrics::{counter, histogram};
+use metrics::{counter, gauge, histogram};
 use sqlx::PgPool;
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc2822;
@@ -154,7 +154,7 @@ impl FetchWorker {
                 db::logs::create(&self.pool, &new_log).await?;
                 db::fetch_tasks::resolve(&self.pool, task.id, new_log.id).await?;
                 #[expect(clippy::needless_update)]
-                db::statistics::apply_delta(
+                let statistics = db::statistics::apply_delta(
                     &self.pool,
                     &StatisticsDelta {
                         stored_logs_size: new_log.size as i64,
@@ -165,6 +165,8 @@ impl FetchWorker {
                 counter!("wiyci_daemon_fetch_logs_total", "status" => "success").increment(1);
                 counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
+                gauge!("wiyci_daemon_statistics_stored_logs_bytes")
+                    .set(statistics.stored_logs_size as f64);
                 info!("log fetched");
             }
             FetchStatus::Reject(reject) => {
