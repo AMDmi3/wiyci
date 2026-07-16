@@ -66,3 +66,42 @@ fn test_pytest_failed_test() {
     );
     assert_eq!(snippet.outcome, TestOutcome::Failed);
 }
+
+#[test]
+fn test_pytest_passed_test() {
+    let snippet: TestResult = parse_snippet(indoc! {r#"
+        Tests/test_webp_leaks.py::TestWebPLeaks::test_leak_load PASSED           [100%]
+    "#});
+
+    assert_eq!(
+        snippet.name,
+        "Tests/test_webp_leaks.py::TestWebPLeaks::test_leak_load"
+    );
+    assert_eq!(snippet.outcome, TestOutcome::Passed);
+}
+
+#[test]
+fn test_pytest_skipped_test() {
+    let snippet: TestResult = parse_snippet(indoc! {r#"
+        Tests/test_imagewin.py::TestImageWinDib::test_dib_mode_string SKIPPED    [ 95%]
+    "#});
+
+    assert_eq!(
+        snippet.name,
+        "Tests/test_imagewin.py::TestImageWinDib::test_dib_mode_string"
+    );
+    assert_eq!(snippet.outcome, TestOutcome::Skipped);
+}
+
+#[test]
+fn test_pytest_skipped_described_test() {
+    let snippet: TestResult = parse_snippet(indoc! {r#"
+        Tests/test_qt_image_toqimage.py::test_sanity[P] SKIPPED (Qt bindings...) [ 99%]
+    "#});
+
+    assert_eq!(
+        snippet.name,
+        "Tests/test_qt_image_toqimage.py::test_sanity[P]"
+    );
+    assert_eq!(snippet.outcome, TestOutcome::Skipped);
+}
