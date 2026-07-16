@@ -58,7 +58,7 @@
 
 				{%- if log.counts.warnings > 0 %}
 				<dt>Warnings</dt>
-				<dd>{{ log.counts.warnings }}</dd>
+				<dd><a href="{{ crate::routes::Route::Snippets.url_for().path_param("id", log.id)?.build()? }}">{{ log.counts.warnings }}</a></dd>
 				{%- endif %}
 
 				{%- if log.counts.has_tests() %}
@@ -68,7 +68,7 @@
 					{{- "+" -}}
 					<span class="tests-counter tests-counter--skipped" title="skipped tests">{{ log.counts.skipped_tests }}</span>
 					{{- "+" -}}
-					<span class="tests-counter tests-counter--failed" title="failed tests">{{ log.counts.failed_tests }}</span>
+					<span class="tests-counter tests-counter--failed" title="failed tests"><a href="{{ crate::routes::Route::Snippets.url_for().path_param("id", log.id)?.build()? }}">{{ log.counts.failed_tests }}</a></span>
 				</dd>
 				{%- endif %}
 			</dl>
