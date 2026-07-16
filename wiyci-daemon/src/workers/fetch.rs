@@ -128,10 +128,6 @@ impl FetchWorker {
             }
         }
 
-        counter!("wiyci_daemon_fetch_logs_total").increment(1);
-        counter!("wiyci_daemon_fetch_bytes_total").increment(size);
-        histogram!("wiyci_daemon_fetch_log_size_bytes").record(size as f64);
-
         file.sync_all().await?;
 
         Ok(FetchStatus::Success(NewLog {
@@ -166,6 +162,9 @@ impl FetchWorker {
                     },
                 )
                 .await?;
+                counter!("wiyci_daemon_fetch_logs_total", "status" => "success").increment(1);
+                counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
+                histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
                 info!("log fetched");
             }
             FetchStatus::Reject(reject) => {
@@ -176,6 +175,7 @@ impl FetchWorker {
                     calc_retry_interval(task.num_attempts),
                 )
                 .await?;
+                counter!("wiyci_daemon_fetch_logs_total", "status" => "reject").increment(1);
                 warn!(%reject, "log fetch failed");
             }
         }
