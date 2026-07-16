@@ -27,19 +27,7 @@ impl ParseWorker {
         Self { pool, storage }
     }
 
-    async fn parse_log(&self, log: &Log) -> anyhow::Result<()> {
-        let report = {
-            let id = log.id;
-            let storage = self.storage.clone();
-            let parser = LogParser::default()
-                .with_max_line_length(Some(10240))
-                .with_max_snippets_per_kind(Some(1000));
-            tokio::task::spawn_blocking(move || -> anyhow::Result<LogParseReport> {
-                Ok(parser.parse(BufReader::new(storage.open(id as u64)?))?)
-            })
-            .await??
-        };
-
+    fn pick_snippets(&self, report: &LogParseReport) -> Vec<NewSnippet> {
         let mut snippets: Vec<NewSnippet> = vec![];
 
         for snippet in report.snippets.get::<CompilerWarning>() {
@@ -56,6 +44,24 @@ impl ParseWorker {
                 });
             }
         }
+
+        snippets
+    }
+
+    async fn parse_log(&self, log: &Log) -> anyhow::Result<()> {
+        let report = {
+            let id = log.id;
+            let storage = self.storage.clone();
+            let parser = LogParser::default()
+                .with_max_line_length(Some(10240))
+                .with_max_snippets_per_kind(Some(1000));
+            tokio::task::spawn_blocking(move || -> anyhow::Result<LogParseReport> {
+                Ok(parser.parse(BufReader::new(storage.open(id as u64)?))?)
+            })
+            .await??
+        };
+
+        let snippets = self.pick_snippets(&report);
 
         let mut snippet_counts: HashMap<SnippetKind, u64> = Default::default();
         for snippet in &snippets {
