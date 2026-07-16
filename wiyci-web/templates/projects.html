@@ -8,7 +8,11 @@
 {% else %}
 <ul class="list list--horizontal list--blocky">
 	{%- for project in projects %}
-	<li class="list__item">
+	<li class="list__item
+		{%- if project.snippet_counts.contains_key(&wiyci_common::models::snippets::SnippetKind::FailedTest) %} list__item--failure
+		{%- else if project.snippet_counts.contains_key(&wiyci_common::models::snippets::SnippetKind::CompilerWarning) %} list__item--warning
+		{%- endif -%}
+	">
 		<a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a>
 	</li>
 	{%- endfor %}

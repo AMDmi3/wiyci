@@ -21,3 +21,13 @@ ul {
 	padding: .5rem;
     background-color: $nav-bg;
 }
+
+// these are temporary until we have proper projects list
+// otherwise they should be in custom components instead
+.list--blocky > .list__item--warning {
+    background-color: $panel-bg-warning;
+}
+
+.list--blocky > .list__item--failure {
+    background-color: $panel-bg-failure;
+}

@@ -89,6 +89,7 @@ impl ParseWorker {
         let mut tx = self.pool.begin().await?;
         db::logs::apply_parsed(&mut tx, log.id, &parsed).await?;
         db::snippets::replace_for_log(&mut tx, log.id, &snippets).await?;
+        db::projects::update_snippet_counts(&mut tx, &log.project_name).await?;
         tx.commit().await?;
 
         info!(

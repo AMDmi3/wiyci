@@ -1,10 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use std::collections::HashMap;
 use std::time::Duration;
 
 use indoc::indoc;
-use sqlx::Postgres;
+use sqlx::{FromRow, Postgres, types::Json};
+use time::OffsetDateTime;
 
 use crate::models::projects::Project;
 
@@ -53,13 +55,44 @@ pub async fn register_update(
     Ok(())
 }
 
+#[derive(FromRow)]
+pub struct DbProject {
+    pub name: String,
+    pub created_at: OffsetDateTime,
+    pub num_tasks: i32,
+    pub next_update_at: OffsetDateTime,
+    pub last_updated_at: Option<OffsetDateTime>,
+    pub snippet_counts: Option<Json<HashMap<String, u64>>>,
+}
+
+impl From<DbProject> for Project {
+    fn from(db: DbProject) -> Self {
+        Self {
+            name: db.name,
+            created_at: db.created_at,
+            num_tasks: db.num_tasks as u32,
+            next_update_at: db.next_update_at,
+            last_updated_at: db.last_updated_at,
+            snippet_counts: db
+                .snippet_counts
+                .map(|json| {
+                    json.into_inner()
+                        .into_iter()
+                        .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
+                        .collect()
+                })
+                .unwrap_or_default(),
+        }
+    }
+}
+
 pub async fn get_by_name(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
     name: &str,
 ) -> sqlx::Result<Option<Project>> {
     let mut tx = conn.begin().await?;
 
-    let project = sqlx::query_as(indoc! {"
+    let project: Option<DbProject> = sqlx::query_as(indoc! {"
         SELECT *
           FROM projects
          WHERE name = $1
@@ -69,7 +102,7 @@ pub async fn get_by_name(
     .await?;
 
     tx.commit().await?;
-    Ok(project)
+    Ok(project.map(|project| project.into()))
 }
 
 pub async fn get_next_for_update(
@@ -77,7 +110,7 @@ pub async fn get_next_for_update(
 ) -> sqlx::Result<Option<Project>> {
     let mut tx = conn.begin().await?;
 
-    let project = sqlx::query_as(indoc! {"
+    let project: Option<DbProject> = sqlx::query_as(indoc! {"
           SELECT *
             FROM projects
            WHERE next_update_at < now()
@@ -88,7 +121,7 @@ pub async fn get_next_for_update(
     .await?;
 
     tx.commit().await?;
-    Ok(project)
+    Ok(project.map(|project| project.into()))
 }
 
 pub async fn list_latest(
@@ -97,7 +130,7 @@ pub async fn list_latest(
 ) -> sqlx::Result<Vec<Project>> {
     let mut tx = conn.begin().await?;
 
-    let projects = sqlx::query_as(indoc! {"
+    let projects: Vec<DbProject> = sqlx::query_as(indoc! {"
           SELECT *
             FROM projects
         ORDER BY created_at DESC
@@ -108,7 +141,7 @@ pub async fn list_latest(
     .await?;
 
     tx.commit().await?;
-    Ok(projects)
+    Ok(projects.into_iter().map(|project| project.into()).collect())
 }
 
 pub async fn list_by_range(
@@ -119,7 +152,7 @@ pub async fn list_by_range(
 ) -> sqlx::Result<Vec<Project>> {
     let mut tx = conn.begin().await?;
 
-    let projects = sqlx::query_as(match (from, to) {
+    let projects: Vec<DbProject> = sqlx::query_as(match (from, to) {
         (Some(_), Some(_)) => indoc! {"
               SELECT *
                 FROM projects
@@ -156,7 +189,7 @@ pub async fn list_by_range(
     .await?;
 
     tx.commit().await?;
-    Ok(projects)
+    Ok(projects.into_iter().map(|project| project.into()).collect())
 }
 
 fn escape_like(input: &str) -> String {
@@ -178,7 +211,7 @@ pub async fn list_by_search(
 
     let escaped_search_term = escape_like(search_term);
 
-    let projects = sqlx::query_as(indoc! {"
+    let projects: Vec<DbProject> = sqlx::query_as(indoc! {"
         (SELECT *
            FROM projects
           WHERE name = $1)
@@ -210,7 +243,37 @@ pub async fn list_by_search(
     .await?;
 
     tx.commit().await?;
-    Ok(projects)
+    Ok(projects.into_iter().map(|project| project.into()).collect())
+}
+
+pub async fn update_snippet_counts(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    name: &str,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
+    sqlx::query(indoc! {"
+        WITH
+            new_counts AS (
+                SELECT key
+                     , MAX(value::BIGINT) AS value
+                  FROM logs, jsonb_each(parsed_snippet_counts) AS counts(key, value)
+                 WHERE project_name = $1
+                 GROUP BY key
+            )
+        UPDATE projects
+           SET snippet_counts = (
+                   SELECT jsonb_object_agg(key, value)
+                     FROM new_counts
+               )
+         WHERE projects.name = $1
+    "})
+    .bind(name)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(())
 }
 
 #[cfg(test)]
