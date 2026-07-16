@@ -95,7 +95,7 @@ impl ParseWorker {
     #[cfg_attr(not(coverage), tracing::instrument(name = "ParseWorker", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "ParseWorker",
+            "Parse",
             async || Ok(db::logs::get_next_for_parsing(&self.pool, LogParser::VERSION).await?),
             async |log| self.parse_log(log).await,
         )

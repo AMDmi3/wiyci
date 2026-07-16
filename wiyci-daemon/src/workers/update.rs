@@ -67,7 +67,7 @@ impl UpdateWorker {
     #[cfg_attr(not(coverage), tracing::instrument(name = "UpdateWorker", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "UpdateWorker",
+            "Update",
             async || Ok(db::projects::get_next_for_update(&self.pool).await?),
             async |project| self.update_project(project).await,
         )
