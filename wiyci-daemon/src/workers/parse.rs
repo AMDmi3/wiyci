@@ -86,8 +86,10 @@ impl ParseWorker {
         counter!("wiyci_daemon_parse_lines_total").increment(report.parsed_lines);
         counter!("wiyci_daemon_parse_parses_total", "type" => if log.parser_version.is_none() { "first" } else { "reparse" }).increment(1);
 
-        db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;
-        db::snippets::replace_for_log(&self.pool, log.id, &snippets).await?;
+        let mut tx = self.pool.begin().await?;
+        db::logs::apply_parsed(&mut tx, log.id, &parsed).await?;
+        db::snippets::replace_for_log(&mut tx, log.id, &snippets).await?;
+        tx.commit().await?;
 
         info!(
             lines = report.parsed_lines,

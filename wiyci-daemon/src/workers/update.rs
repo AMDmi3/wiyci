@@ -53,10 +53,11 @@ impl UpdateWorker {
             .with_jitter(UPDATE_PERIOD_JITTER)
             .trimmed_to_micros();
 
-        db::fetch_tasks::update_tasks_for_project(&self.pool, &project.name, &tasks).await?;
-
-        db::projects::register_update(&self.pool, &project.name, tasks.len() as u32, update_period)
+        let mut tx = self.pool.begin().await?;
+        db::fetch_tasks::update_tasks_for_project(&mut tx, &project.name, &tasks).await?;
+        db::projects::register_update(&mut tx, &project.name, tasks.len() as u32, update_period)
             .await?;
+        tx.commit().await?;
 
         counter!("wiyci_daemon_update_projects_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);
         counter!("wiyci_daemon_update_tasks_total").increment(tasks.len() as u64);

@@ -162,17 +162,19 @@ impl FetchWorker {
 
         match self.fetch_and_store_log(task).await? {
             FetchStatus::Success(new_log) => {
-                db::logs::create(&self.pool, &new_log).await?;
-                db::fetch_tasks::resolve(&self.pool, task.id, new_log.id).await?;
+                let mut tx = self.pool.begin().await?;
+                db::logs::create(&mut tx, &new_log).await?;
+                db::fetch_tasks::resolve(&mut tx, task.id, new_log.id).await?;
                 #[expect(clippy::needless_update)]
                 let statistics = db::statistics::apply_delta(
-                    &self.pool,
+                    &mut tx,
                     &StatisticsDelta {
                         stored_logs_size: new_log.size as i64,
                         ..Default::default()
                     },
                 )
                 .await?;
+                tx.commit().await?;
                 counter!("wiyci_daemon_fetch_logs_total", "status" => "success").increment(1);
                 counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
