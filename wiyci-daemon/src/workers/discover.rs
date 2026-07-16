@@ -61,7 +61,7 @@ impl DiscoverWorker {
         }
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "DiscoverWorker", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "Discover", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         let projects = if self.enable_discovery {
             DISCOVERED_PROJECTS

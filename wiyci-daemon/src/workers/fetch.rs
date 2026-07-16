@@ -185,7 +185,7 @@ impl FetchWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "FetchWorker", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "Fetch", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
             "Fetch",

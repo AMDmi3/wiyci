@@ -92,7 +92,7 @@ impl ParseWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "ParseWorker", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "Parse", skip_all))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
             "Parse",
