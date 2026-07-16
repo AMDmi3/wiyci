@@ -61,7 +61,7 @@ macro_rules! typed_storage {
                 }
 
                 #[allow(unused)]
-                pub fn iter_of<'a, T>(&'a self) -> impl Iterator<Item = &'a T>
+                pub fn iter_of<'a, T>(&'a self) -> <&'a $container<T> as IntoIterator>::IntoIter
                 where
                     T: [<StoredIn $name>] + 'a,
                     &'a $container<T>: IntoIterator<Item = &'a T>
@@ -70,7 +70,7 @@ macro_rules! typed_storage {
                 }
 
                 #[allow(unused)]
-                pub fn iter_mut_of<'a, T>(&'a mut self) -> impl Iterator<Item = &'a mut T>
+                pub fn iter_mut_of<'a, T>(&'a mut self) -> <&'a mut $container<T> as IntoIterator>::IntoIter
                 where
                     T: [<StoredIn $name>] + 'a,
                     &'a mut $container<T>: IntoIterator<Item = &'a mut T>
@@ -79,7 +79,7 @@ macro_rules! typed_storage {
                 }
 
                 #[allow(unused)]
-                pub fn into_iter_of<T>(self) -> impl Iterator<Item = T>
+                pub fn into_iter_of<T>(self) -> <$container<T> as IntoIterator>::IntoIter
                 where
                     T: [<StoredIn $name>],
                     $container<T>: IntoIterator<Item = T>
