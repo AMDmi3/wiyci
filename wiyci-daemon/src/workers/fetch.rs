@@ -165,7 +165,7 @@ impl FetchWorker {
                 counter!("wiyci_daemon_fetch_logs_total", "status" => "success").increment(1);
                 counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
-                gauge!("wiyci_daemon_statistics_stored_logs_bytes")
+                gauge!("wiyci_daemon_statistics_stored_logs_size_bytes")
                     .set(statistics.stored_logs_size as f64);
                 info!("log fetched");
             }
