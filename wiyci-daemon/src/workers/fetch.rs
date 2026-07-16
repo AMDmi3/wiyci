@@ -25,9 +25,17 @@ use crate::workers::util::PollingWorkerRunner;
 const MAX_ATTEMPTS: u32 = 5;
 const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
 
+const RETRY_PERIOD_BASE: Duration = Duration::from_days(1);
+const RETRY_PERIOD_MULTIPLIER: f64 = 1.5;
+const RETRY_PERIOD_JITTER: f64 = 0.1;
+
 fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
-    if num_attempts < MAX_ATTEMPTS {
-        Some(Duration::from_days(num_attempts as u64 + 1))
+    // exponentially increasing period starting at RETRY_PERIOD_BASE
+    if num_attempts + 1 < MAX_ATTEMPTS {
+        Some(RETRY_PERIOD_BASE.mul_f64(
+            RETRY_PERIOD_MULTIPLIER.powi(num_attempts as i32)
+                * (1.0 + RETRY_PERIOD_JITTER * rand::random::<f64>()),
+        ))
     } else {
         None
     }

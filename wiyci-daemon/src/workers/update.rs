@@ -19,6 +19,7 @@ use crate::workers::util::PollingWorkerRunner;
 
 const ACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(1);
 const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
+const UPDATE_PERIOD_JITTER: f64 = 0.1;
 
 pub struct UpdateWorker {
     pool: PgPool,
@@ -47,6 +48,8 @@ impl UpdateWorker {
         } else {
             ACTIVE_PROJECT_UPDATE_PERIOD
         };
+        let update_period =
+            update_period.mul_f64(1.0 + UPDATE_PERIOD_JITTER * rand::random::<f64>());
 
         db::fetch_tasks::update_tasks_for_project(&self.pool, &project.name, &tasks).await?;
 
