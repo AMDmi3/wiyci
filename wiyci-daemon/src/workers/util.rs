@@ -6,7 +6,11 @@ use std::time::{Duration, Instant};
 use metrics::{counter, histogram};
 use tracing::{Instrument as _, Span, debug, error};
 
-const DEFAULT_TASK_WAIT: Duration = Duration::from_secs(5);
+const DEFAULT_TASK_WAIT: Duration = if cfg!(debug_assertions) {
+    Duration::from_secs(5)
+} else {
+    Duration::from_secs(60)
+};
 const DEFAULT_RETRY_WAIT: Duration = Duration::from_secs(60);
 
 pub struct PollingWorkerRunner<Task, GetTask, ProcessTask> {
