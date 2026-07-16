@@ -6,7 +6,7 @@ use std::io::BufReader;
 
 use metrics::counter;
 use sqlx::PgPool;
-use tracing::info_span;
+use tracing::{info, info_span};
 
 use wiyci_common::db;
 use wiyci_common::models::logs::{Log, ParsedLog};
@@ -88,6 +88,13 @@ impl ParseWorker {
 
         db::logs::apply_parsed(&self.pool, log.id, &parsed).await?;
         db::snippets::replace_for_log(&self.pool, log.id, &snippets).await?;
+
+        info!(
+            lines = report.parsed_lines,
+            snippets_parsed = report.snippets.len(),
+            snippets_used = snippets.len(),
+            "log parsed"
+        );
 
         Ok(())
     }

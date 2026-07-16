@@ -167,7 +167,7 @@ impl FetchWorker {
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
                 gauge!("wiyci_daemon_statistics_stored_logs_size_bytes")
                     .set(statistics.stored_logs_size as f64);
-                info!("log fetched");
+                info!(size = new_log.size, "log fetched");
             }
             FetchStatus::Reject(reject) => {
                 db::fetch_tasks::register_failure(
@@ -192,7 +192,7 @@ impl FetchWorker {
             async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool).await?),
             async |task| self.fetch_log(task).await,
         )
-        .with_span(|task| info_span!("task", url = task.url))
+        .with_span(|task| info_span!("task", id = task.id, url = task.url))
         .run()
         .await
     }
