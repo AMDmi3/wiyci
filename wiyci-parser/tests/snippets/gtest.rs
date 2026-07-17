@@ -1,14 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::io::{BufReader, Cursor};
-
 use indoc::indoc;
 
-use wiyci_parser::LogParser;
 use wiyci_parser::snippets::{TestOutcome, TestResult};
 
-use crate::common::{SnippetSaver, parse_snippet};
+use crate::common::{parse_snippet, parse_snippets};
 
 #[test]
 fn test_passed() {
@@ -60,18 +57,11 @@ fn test_failed() {
 
 #[test]
 fn test_no_false_positives() {
-    let mut saver = SnippetSaver::default();
-
-    LogParser::default()
-        .parse(
-            BufReader::new(Cursor::new(indoc! {r#"
+    let snippets: Vec<TestResult> = parse_snippets(indoc! {r#"
         [  PASSED  ] 0 tests.
         [  FAILED  ] 1 test, listed below:
         [  FAILED  ] utHMPImportExport.importHMPFromFileTest
-    "#})),
-            &mut saver,
-        )
-        .expect("parsing failed");
+    "#});
 
-    assert_eq!(saver.snippets.len(), 0);
+    assert!(snippets.is_empty());
 }

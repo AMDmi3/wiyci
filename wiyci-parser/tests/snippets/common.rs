@@ -27,6 +27,18 @@ where
     T: Debug + TryFrom<Snippet>,
     <T as TryFrom<Snippet>>::Error: Debug,
 {
+    parse_snippets(text)
+        .into_iter()
+        .exactly_one()
+        .expect("parser was expected to return exactly one snippet")
+}
+
+#[track_caller]
+pub fn parse_snippets<T>(text: &str) -> Vec<T>
+where
+    T: Debug + TryFrom<Snippet>,
+    <T as TryFrom<Snippet>>::Error: Debug,
+{
     let mut saver = SnippetSaver::default();
 
     LogParser::default()
@@ -36,8 +48,7 @@ where
     saver
         .snippets
         .into_iter()
-        .exactly_one()
-        .expect("parser was expected to return exactly one snippet")
-        .try_into()
+        .map(|snippet| snippet.try_into())
+        .try_collect()
         .expect("got unexpected snippet type")
 }
