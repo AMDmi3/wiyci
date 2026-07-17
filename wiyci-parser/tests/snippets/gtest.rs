@@ -11,7 +11,6 @@ use wiyci_parser::snippets::{TestOutcome, TestResult};
 use crate::common::{SnippetSaver, parse_snippet};
 
 #[test]
-#[ignore = "not implemented yet"]
 fn test_passed() {
     let snippet: TestResult = parse_snippet(indoc! {r#"
         [ RUN      ] RebufferModule.FixedToVariable
@@ -23,7 +22,6 @@ fn test_passed() {
 }
 
 #[test]
-#[ignore = "not implemented yet"]
 fn test_skipped() {
     let snippet: TestResult = parse_snippet(indoc! {r#"
         [ RUN      ] GenericStream/TlsConnectGeneric.CertificateCompressionTLS12AndBelow/0

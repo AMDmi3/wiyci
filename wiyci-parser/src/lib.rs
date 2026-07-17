@@ -35,7 +35,7 @@ pub trait SnippetHandler {
 
 impl LogParser {
     // Bump this on each change of parser output, so the daemon could reparse stored logs
-    pub const VERSION: u32 = 5;
+    pub const VERSION: u32 = 6;
 
     pub fn with_max_line_length(mut self, max_line_length: Option<usize>) -> Self {
         self.max_line_length = max_line_length;

@@ -9,7 +9,7 @@ use crate::matching::captures::SimplifiedCaptures;
 use crate::matching::common::{SnippetMatchResult, SnippetMatcher};
 use crate::snippets::{Snippet, TestOutcome, TestResult};
 
-static PATTERN: &str = r"^\[  FAILED  \] ([^ ]+) \([0-9]+ ms\)$";
+static PATTERN: &str = r"^\[ +(OK|SKIPPED|FAILED) +\] ([^ ]+) \([0-9]+ ms\)$";
 static REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(PATTERN).unwrap());
 
 #[derive(Default)]
@@ -25,10 +25,19 @@ impl SnippetMatcher for GtestTestResultMatcher {
             return SnippetMatchResult::NoMatch;
         };
 
+        let outcome = match m.get_str(1) {
+            "OK" => TestOutcome::Passed,
+            "SKIPPED" => TestOutcome::Skipped,
+            "FAILED" => TestOutcome::Failed,
+            _ => {
+                unreachable!("nonempty string ensured by the regex");
+            }
+        };
+
         Snippet::TestResult(TestResult {
             lines: vec![line.to_string()],
-            name: m.get_any(1),
-            outcome: TestOutcome::Failed,
+            name: m.get_any(2),
+            outcome,
         })
         .into()
     }

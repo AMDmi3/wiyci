@@ -8,7 +8,6 @@ use wiyci_parser::snippets::{TestOutcome, TestResult};
 use crate::common::parse_snippet;
 
 #[test]
-#[ignore = "not implemented yet"]
 fn test_passed() {
     let snippet: TestResult = parse_snippet(indoc! {r#"
         [line start marker]
@@ -21,7 +20,6 @@ fn test_passed() {
 }
 
 #[test]
-#[ignore = "not implemented yet"]
 fn test_skipped() {
     let snippet: TestResult = parse_snippet(indoc! {r#"
         [line start marker]
@@ -34,7 +32,6 @@ fn test_skipped() {
 }
 
 #[test]
-#[ignore = "not implemented yet"]
 fn test_not_run() {
     let snippet: TestResult = parse_snippet(indoc! {r#"
         [line start marker]
