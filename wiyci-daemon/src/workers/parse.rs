@@ -17,6 +17,9 @@ use wiyci_parser::{LogParseReport, LogParser};
 use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
+// Bump this on each pasing logic change to reparse stored logs
+const VERSION: u32 = LogParser::VERSION + 0;
+
 pub struct ParseWorker {
     pool: PgPool,
     storage: LogStorage,
@@ -78,7 +81,7 @@ impl ParseWorker {
         }
 
         let parsed = ParsedLog {
-            parser_version: LogParser::VERSION,
+            parser_version: VERSION,
             parsed_num_lines: report.parsed_lines as u32,
             parsed_snippet_counts: snippet_counts,
         };
@@ -106,7 +109,7 @@ impl ParseWorker {
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
             "Parse",
-            async || Ok(db::logs::get_next_for_parsing(&self.pool, LogParser::VERSION).await?),
+            async || Ok(db::logs::get_next_for_parsing(&self.pool, VERSION).await?),
             async |log| self.parse_log(log).await,
         )
         .with_span(|log| info_span!("log", id = log.id))
