@@ -5,6 +5,19 @@ use std::collections::HashMap;
 
 use strum::IntoStaticStr;
 
+pub trait Snippet {
+    /// Unique value used for limiting number of same-kind items.
+    ///
+    /// When number of generated snippets is limited, snippets with
+    /// different descriptors are considered different, even if these
+    /// are of same type.
+    ///
+    /// Snippets with no descriptor are not subject to limiting.
+    fn limiting_discriminant(&self) -> Option<u64> {
+        Some(0)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct CompilerWarning {
     pub lines: Vec<String>,
@@ -13,6 +26,8 @@ pub struct CompilerWarning {
     pub category: String,
     pub message: String,
 }
+
+impl Snippet for CompilerWarning {}
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TestOutcome {
@@ -26,6 +41,12 @@ pub struct TestResult {
     pub lines: Vec<String>,
     pub name: String,
     pub outcome: TestOutcome,
+}
+
+impl Snippet for TestResult {
+    fn limiting_discriminant(&self) -> Option<u64> {
+        Some(self.outcome as u64)
+    }
 }
 
 macro_rules! declare_snippets {
@@ -47,6 +68,22 @@ macro_rules! declare_snippets {
                 }
             }
         )+
+
+        impl AnySnippet {
+            pub fn kind(&self) -> SnippetKind {
+                match self {
+                    $(Self::$kind(..) => SnippetKind::$kind,)+
+                }
+            }
+        }
+
+        impl Snippet for AnySnippet {
+            fn limiting_discriminant(&self) -> Option<u64> {
+                match self {
+                    $(Self::$kind(snippet) => snippet.limiting_discriminant(),)+
+                }
+            }
+        }
 
         typed_storage!(
             #[derive(Clone, Debug)]
@@ -77,19 +114,9 @@ macro_rules! declare_snippets {
                 0
             }
 
-            pub fn push_with_limit(&mut self, snippet: AnySnippet, limit: Option<usize>) -> bool {
+            pub fn push(&mut self, snippet: AnySnippet) {
                 match snippet {
-                    $(
-                        AnySnippet::$kind(snippet) => {
-                            let storage = self.get_mut();
-                            if limit.is_none_or(|limit| storage.len() < limit) {
-                                storage.push(snippet);
-                                true
-                            } else {
-                                false
-                            }
-                        },
-                    )+
+                    $(AnySnippet::$kind(snippet) => self.get_mut().push(snippet),)+
                 }
             }
         }

@@ -10,6 +10,7 @@ mod lines;
 mod matching;
 pub mod snippets;
 
+use std::collections::HashMap;
 use std::io::BufRead;
 
 use bitflags::bitflags;
@@ -17,7 +18,7 @@ use bitflags::bitflags;
 use crate::lines::SafeLines;
 use crate::matching::common::SnippetMatchResult;
 use crate::matching::factory::try_spawn_matchers;
-use crate::snippets::{AnySnippet, SnippetStorage};
+use crate::snippets::{AnySnippet, Snippet, SnippetKind, SnippetStorage};
 
 bitflags! {
     #[derive(Debug, Default, PartialEq, Eq)]
@@ -44,9 +45,11 @@ pub struct LogParser {
     max_snippets_per_kind: Option<usize>,
 }
 
+type SnippetCounts = HashMap<(SnippetKind, u64), usize>;
+
 impl LogParser {
     // Bump this on each change of parser output, so the daemon could reparse stored logs
-    pub const VERSION: u32 = 4;
+    pub const VERSION: u32 = 5;
 
     pub fn with_max_line_length(mut self, max_line_length: Option<usize>) -> Self {
         self.max_line_length = max_line_length;
@@ -68,20 +71,35 @@ impl LogParser {
         self
     }
 
-    fn try_push_snippet(&self, snippet: AnySnippet, report: &mut LogParseReport) {
+    fn try_push_snippet(
+        &self,
+        snippet: AnySnippet,
+        report: &mut LogParseReport,
+        snippet_counts: &mut SnippetCounts,
+    ) {
         if self
             .max_total_snippets
-            .is_some_and(|n| report.snippets.len() >= n)
+            .is_some_and(|limit| report.snippets.len() >= limit)
         {
             report.flags |= Flags::TOO_MANY_SNIPPETS;
             return;
         }
 
-        if !report
-            .snippets
-            .push_with_limit(snippet, self.max_snippets_per_kind)
-        {
-            report.flags |= Flags::TOO_MANY_SNIPPETS;
+        if let Some(limiting_discriminant) = snippet.limiting_discriminant() {
+            let counter = snippet_counts
+                .entry((snippet.kind(), limiting_discriminant))
+                .or_default();
+            if self
+                .max_snippets_per_kind
+                .is_some_and(|limit| *counter >= limit)
+            {
+                report.flags |= Flags::TOO_MANY_SNIPPETS;
+            } else {
+                report.snippets.push(snippet);
+                *counter += 1;
+            }
+        } else {
+            report.snippets.push(snippet);
         }
     }
 
@@ -89,6 +107,7 @@ impl LogParser {
         let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut res = LogParseReport::default();
         let mut current_matchers = vec![];
+        let mut snippet_counts: SnippetCounts = Default::default();
 
         for line in lines {
             let line = line?;
@@ -111,7 +130,7 @@ impl LogParser {
             current_matchers.retain_mut(|matcher| match matcher.match_line(&line) {
                 SnippetMatchResult::NoMatch => false,
                 SnippetMatchResult::Complete(snippet) => {
-                    self.try_push_snippet(snippet, &mut res);
+                    self.try_push_snippet(snippet, &mut res, &mut snippet_counts);
                     false
                 }
                 SnippetMatchResult::Continued => true,
@@ -123,7 +142,7 @@ impl LogParser {
         // flush remaining matchers
         for mut matcher in current_matchers {
             if let SnippetMatchResult::Complete(snippet) = matcher.flush() {
-                self.try_push_snippet(snippet, &mut res);
+                self.try_push_snippet(snippet, &mut res, &mut snippet_counts);
             }
         }
 
