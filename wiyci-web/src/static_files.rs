@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -15,6 +15,7 @@ static STATIC_FILES_RAW: Dir = include_dir!("$CARGO_MANIFEST_DIR/static");
 pub static STATIC_FILES: LazyLock<StaticFiles> =
     LazyLock::new(|| StaticFiles::new(&STATIC_FILES_RAW));
 
+#[allow(semicolon_in_expressions_from_macros)]
 static CSS: &str = grass::include!("wiyci-web/css/main.scss");
 
 pub struct StaticFile {

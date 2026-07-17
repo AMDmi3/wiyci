@@ -41,4 +41,4 @@ This project requires latest Rust-nightly to build and PostgreSQL 17+ to run.
 
 ## License
 
-- [GPLv3 or later](LICENSE).
+- [MIT](COPYING-MIT) OR [Apache-2.0](COPYING-APACHE)
