@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::cell::RefCell;
-use std::collections::HashMap;
+mod snippets;
+
 use std::io::BufReader;
 
 use metrics::counter;
@@ -11,15 +11,16 @@ use tracing::{info, info_span};
 
 use wiyci_common::db;
 use wiyci_common::models::logs::{Log, ParsedLog};
-use wiyci_common::models::snippets::{NewSnippet, SnippetKind};
-use wiyci_parser::snippets::{CompilerWarning, TestOutcome, TestResult};
-use wiyci_parser::{LogParseReport, LogParser};
+use wiyci_parser::LogParser;
 
 use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
 // Bump this on each pasing logic change to reparse stored logs
 const VERSION: u32 = LogParser::VERSION + 1;
+
+const MAX_PARSED_LINE_LENGTH: Option<usize> = Some(10240);
+const MAX_PARSED_SNIPPETS_PER_KIND: Option<u64> = Some(1000);
 
 pub struct ParseWorker {
     pool: PgPool,
@@ -31,79 +32,33 @@ impl ParseWorker {
         Self { pool, storage }
     }
 
-    fn pick_snippets(
-        &self,
-        report: &LogParseReport,
-    ) -> (Vec<NewSnippet>, HashMap<SnippetKind, u64>) {
-        let snippets: RefCell<Vec<NewSnippet>> = Default::default();
-        let counts: RefCell<HashMap<SnippetKind, u64>> = Default::default();
-
-        let accept = |snippet: NewSnippet| {
-            *counts.borrow_mut().entry(snippet.kind).or_default() += 1;
-            snippets.borrow_mut().push(snippet);
-        };
-
-        let count_only = |kind: SnippetKind| {
-            *counts.borrow_mut().entry(kind).or_default() += 1;
-        };
-
-        for snippet in report.snippets.get::<CompilerWarning>() {
-            accept(NewSnippet {
-                kind: SnippetKind::CompilerWarning,
-                text: snippet.lines.join("\n"),
-            });
-        }
-        for snippet in report.snippets.get::<TestResult>() {
-            match snippet.outcome {
-                TestOutcome::Failed => {
-                    accept(NewSnippet {
-                        kind: SnippetKind::FailedTest,
-                        text: snippet.lines.join("\n"),
-                    });
-                }
-                TestOutcome::Passed => {
-                    count_only(SnippetKind::PassedTest);
-                }
-                TestOutcome::Skipped => {
-                    count_only(SnippetKind::SkippedTest);
-                }
-            }
-        }
-
-        (snippets.into_inner(), counts.into_inner())
-    }
-
     async fn parse_log(&self, log: &Log) -> anyhow::Result<()> {
-        let report = {
+        let (status, snippets, counts) = {
             let id = log.id;
             let storage = self.storage.clone();
-            let parser = LogParser::default()
-                .with_max_line_length(Some(10240))
-                .with_max_snippets_per_kind(Some(1000));
-            tokio::task::spawn_blocking(move || -> anyhow::Result<LogParseReport> {
-                Ok(parser.parse(BufReader::new(storage.open(id as u64)?))?)
+            let parser = LogParser::default().with_max_line_length(MAX_PARSED_LINE_LENGTH);
+            tokio::task::spawn_blocking(move || -> anyhow::Result<_> {
+                let mut processor = snippets::SnippetProcessor::default()
+                    .with_max_snippets_per_kind(MAX_PARSED_SNIPPETS_PER_KIND);
+                let status =
+                    parser.parse(BufReader::new(storage.open(id as u64)?), &mut processor)?;
+                Ok((status, processor.snippets, processor.counts))
             })
             .await??
         };
 
-        for (kind, count) in &report.snippets.counts_per_kind() {
-            let kind: &'static str = kind.into();
-            counter!("wiyci_daemon_parse_parsed_snippets_total", "kind" => kind).increment(*count);
-        }
-
-        let (snippets, snippet_counts) = self.pick_snippets(&report);
-        for (kind, count) in &snippet_counts {
+        for (kind, count) in &counts {
             let kind: &'static str = kind.into();
             counter!("wiyci_daemon_parse_used_snippets_total", "kind" => kind).increment(*count);
         }
 
         let parsed = ParsedLog {
             parser_version: VERSION,
-            parsed_num_lines: report.parsed_lines as u32,
-            parsed_snippet_counts: snippet_counts,
+            parsed_num_lines: status.num_parsed_lines as u32,
+            parsed_snippet_counts: counts,
         };
 
-        counter!("wiyci_daemon_parse_lines_total").increment(report.parsed_lines);
+        counter!("wiyci_daemon_parse_lines_total").increment(status.num_parsed_lines);
         counter!("wiyci_daemon_parse_parses_total", "type" => if log.parser_version.is_none() { "first" } else { "reparse" }).increment(1);
 
         let mut tx = self.pool.begin().await?;
@@ -113,8 +68,7 @@ impl ParseWorker {
         tx.commit().await?;
 
         info!(
-            lines = report.parsed_lines,
-            snippets_parsed = report.snippets.len(),
+            lines = status.num_parsed_lines,
             snippets_used = snippets.len(),
             "log parsed"
         );

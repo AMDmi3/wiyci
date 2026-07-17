@@ -1,55 +1,94 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use std::fmt::Debug;
 use std::io::{BufReader, Cursor};
+use std::ops::ControlFlow;
 
 use indoc::indoc;
+use itertools::Itertools as _;
 
-use wiyci_parser::{Flags, LogParser, snippets};
+use wiyci_parser::{LogParser, ParseStatus, SnippetHandler, snippets::*};
+
+#[derive(Default)]
+struct SnippetSaver {
+    snippets: Vec<Snippet>,
+}
+
+impl SnippetHandler for SnippetSaver {
+    fn handle_snippet(&mut self, snippet: Snippet) -> ControlFlow<()> {
+        self.snippets.push(snippet);
+        ControlFlow::Continue(())
+    }
+}
+
+#[track_caller]
+fn parse_snippet<S, T>(text: T) -> (S, ParseStatus)
+where
+    S: Debug + TryFrom<Snippet>,
+    <S as TryFrom<Snippet>>::Error: Debug,
+    T: AsRef<[u8]>,
+{
+    let mut saver = SnippetSaver::default();
+
+    let status = LogParser::default()
+        .parse(BufReader::new(Cursor::new(text)), &mut saver)
+        .expect("parsing failed");
+
+    (
+        saver
+            .snippets
+            .into_iter()
+            .exactly_one()
+            .expect("parser was expected to return exactly one snippet")
+            .try_into()
+            .expect("got unexpected snippet type"),
+        status,
+    )
+}
+
+fn is_clean_parse(status: &ParseStatus) -> bool {
+    status.num_truncated_lines == 0
+        && status.num_invalid_utf8_lines == 0
+        && !status.is_truncated
+        && !status.is_interrupted
+}
 
 #[test]
 fn test_plain() {
-    let data = Cursor::new(indoc! {r#"
-        c++ -c 1.cc
-        1.cc: In function ‘int foo()’:
+    let (snippet, status): (CompilerWarning, _) = parse_snippet(indoc! {"
         1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
             1 | int foo() {}
               |            ^
-    "#});
+    "});
 
-    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let warning = &res.snippets.get::<snippets::CompilerWarning>()[0];
-
+    assert!(is_clean_parse(&status));
+    assert_eq!(snippet.path, "1.cc");
     assert_eq!(
-        warning.message,
+        snippet.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
-    assert_eq!(res.flags, Flags::empty());
 }
 
 #[test]
 fn test_bad_utf8() {
-    let data = Cursor::new(indoc! {b"
-        c++ -c 1.cc
-        1.cc: In function 'int foo()':
+    let (snippet, status): (CompilerWarning, _) = parse_snippet(indoc! {b"
         1.cc:1:12: warning: no return statement in function returning non-void [-Wreturn-type]
-            1 | int foo() { const char badutf = \"\xc3\" }
+            1 | int foo() { const char *badutf = \"\xc3\"; }
               |            ^
     "});
 
-    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let warning = &res.snippets.get::<snippets::CompilerWarning>()[0];
-
+    assert_eq!(status.num_invalid_utf8_lines, 1);
+    assert_eq!(snippet.path, "1.cc");
     assert_eq!(
-        warning.message,
+        snippet.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
-    assert_eq!(res.flags, Flags::HAD_INVALID_UTF8);
 }
 
 #[test]
 fn test_ansi() {
-    let data = Cursor::new(indoc! {"
+    let (snippet, status): (CompilerWarning, _) = parse_snippet(indoc! {"
         c++ -c 1.cc
         \x1b[01m\x1b[K1.cc:\x1b[m\x1b[K In function ‘\x1b[01m\x1b[Kint foo()\x1b[m\x1b[K’:
         \x1b[01m\x1b[K1.cc:1:12:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kno return statement in function returning non-void [\x1b[01;35m\x1b[K-Wreturn-type\x1b[m\x1b[K]
@@ -57,12 +96,10 @@ fn test_ansi() {
               |            \x1b[01;35m\x1b[K^\x1b[m\x1b[K
     "});
 
-    let res = LogParser::default().parse(BufReader::new(data)).unwrap();
-    let warning = &res.snippets.get::<snippets::CompilerWarning>()[0];
-
+    assert!(is_clean_parse(&status));
+    assert_eq!(snippet.path, "1.cc");
     assert_eq!(
-        warning.message,
+        snippet.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"
     );
-    assert_eq!(res.flags, Flags::empty());
 }

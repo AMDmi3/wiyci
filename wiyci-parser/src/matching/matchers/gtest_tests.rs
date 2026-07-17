@@ -7,7 +7,7 @@ use regex::Regex;
 
 use crate::matching::captures::SimplifiedCaptures;
 use crate::matching::common::{SnippetMatchResult, SnippetMatcher};
-use crate::snippets::{TestOutcome, TestResult};
+use crate::snippets::{Snippet, TestOutcome, TestResult};
 
 static PATTERN: &str = r"^\[  FAILED  \] ([^ ]+) \([0-9]+ ms\)$";
 static REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(PATTERN).unwrap());
@@ -25,11 +25,11 @@ impl SnippetMatcher for GtestTestResultMatcher {
             return SnippetMatchResult::NoMatch;
         };
 
-        TestResult {
+        Snippet::TestResult(TestResult {
             lines: vec![line.to_string()],
             name: m.get_any(1),
             outcome: TestOutcome::Failed,
-        }
+        })
         .into()
     }
 }

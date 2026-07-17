@@ -7,7 +7,7 @@ use regex::Regex;
 
 use crate::matching::captures::SimplifiedCaptures;
 use crate::matching::common::{SnippetMatchResult, SnippetMatcher};
-use crate::snippets::{TestOutcome, TestResult};
+use crate::snippets::{Snippet, TestOutcome, TestResult};
 
 static MAIN_PATTERN: &str = r"^([^:]+::[^ ]+) (FAILED|PASSED) +\[[0-9 ]{3}%\]$";
 static MAIN_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(MAIN_PATTERN).unwrap());
@@ -33,11 +33,11 @@ impl SnippetMatcher for PytestTestResultMatcher {
             }
         };
 
-        TestResult {
+        Snippet::TestResult(TestResult {
             lines: vec![line.to_string()],
             name: m.get_any(1),
             outcome,
-        }
+        })
         .into()
     }
 }
@@ -58,11 +58,11 @@ impl SnippetMatcher for PytestTestSkippedResultMatcher {
             return SnippetMatchResult::NoMatch;
         };
 
-        TestResult {
+        Snippet::TestResult(TestResult {
             lines: vec![line.to_string()],
             name: m.get_any(1),
             outcome: TestOutcome::Skipped,
-        }
+        })
         .into()
     }
 }

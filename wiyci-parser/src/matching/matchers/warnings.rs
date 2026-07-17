@@ -8,7 +8,7 @@ use regex::Regex;
 
 use crate::matching::captures::SimplifiedCaptures;
 use crate::matching::common::{SnippetMatchResult, SnippetMatcher};
-use crate::snippets::CompilerWarning;
+use crate::snippets::{CompilerWarning, Snippet};
 
 // XXX: is position (second number after path) mandatory?
 // Note: the regex ensures line number fits into any 32 bit integer
@@ -75,12 +75,12 @@ impl SnippetMatcher for CompilerWarningMatcher {
                 self.lines.push(line.to_string());
                 SnippetMatchResult::Continued
             } else {
-                CompilerWarning::from_state(
+                Snippet::CompilerWarning(CompilerWarning::from_state(
                     take(&mut self.lines),
                     self.details
                         .take()
                         .expect("we're in !self.detauls.is_none() branch"),
-                )
+                ))
                 .into()
             }
         }
@@ -88,7 +88,8 @@ impl SnippetMatcher for CompilerWarningMatcher {
 
     fn flush(&mut self) -> SnippetMatchResult {
         if let Some(details) = self.details.take() {
-            CompilerWarning::from_state(take(&mut self.lines), details).into()
+            Snippet::CompilerWarning(CompilerWarning::from_state(take(&mut self.lines), details))
+                .into()
         } else {
             SnippetMatchResult::NoMatch
         }
