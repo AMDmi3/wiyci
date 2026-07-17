@@ -66,7 +66,15 @@
 					{{- "+" -}}
 					<span class="tests-counter tests-counter--skipped" title="skipped tests">{{ log.counts.skipped_tests }}</span>
 					{{- "+" -}}
-					<span class="tests-counter tests-counter--failed" title="failed tests"><a href="{{ crate::routes::Route::Snippets.url_for().path_param("id", log.id)?.build()? }}">{{ log.counts.failed_tests }}</a></span>
+					<span class="tests-counter tests-counter--failed" title="failed tests">
+						{%- if log.counts.failed_tests > 0 -%}
+						<a href="{{ crate::routes::Route::Snippets.url_for().path_param("id", log.id)?.build()? }}">
+						{%- endif -%}
+							{{ log.counts.failed_tests }}
+						{%- if log.counts.failed_tests > 0 -%}
+						</a>
+						{%- endif -%}
+					</span>
 				</dd>
 				{%- endif %}
 			</dl>
