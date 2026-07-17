@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1023
+content-length: 984
 
 <!DOCTYPE html>
 <html lang="en">
@@ -44,7 +44,6 @@ content-length: 1023
 <footer class="footer"><div class="container">
 <div class="columns columns--justify">
 	<div>Copyright (C) Dmitry Marakasov</div>
-	<div>Code licensed under GPLv3+</div>
 	<div>GitHub <a href="https://github.com/AMDmi3/wiyci">repository</a>, <a href="https://github.com/AMDmi3/wiyci/issues">issues</a></div>
 </div>
 </div></footer>
