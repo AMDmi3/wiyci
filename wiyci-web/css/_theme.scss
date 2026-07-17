@@ -4,14 +4,14 @@
 $panel-bg-default: light-dark($zinc-50, $zinc-850);
 $accent-bg-default: light-dark($zinc-100, $zinc-700);
 
-$panel-bg-success: light-dark(#{color.mix($zinc-50, $green-50)}, $jade-850);
+$panel-bg-success: light-dark(#{color.mix($zinc-50, $green-50)}, $jade-800);
 $accent-bg-success: light-dark(#{color.mix($zinc-100, $green-100)}, $jade-700);
 
-$panel-bg-warning: light-dark($amber-50, $amber-850);
-$accent-bg-warning: light-dark($amber-100, $amber-700);
+$panel-bg-warning: light-dark($amber-50, $yellow-800);
+$accent-bg-warning: light-dark($amber-100, $yellow-700);
 
-$panel-bg-failure: light-dark($red-100, $orange-850);
-$accent-bg-failure: light-dark($red-200, $orange-700);
+$panel-bg-failure: light-dark($red-100, #{color.mix($orange-800,$orange-850)});
+$accent-bg-failure: light-dark($red-200, $orange-750);
 
 $main-fg: light-dark($zinc-750, $zinc-200);
 $main-bg: light-dark($white, #{color.mix($slate-950, $slate-900)});

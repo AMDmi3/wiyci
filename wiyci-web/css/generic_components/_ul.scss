@@ -25,9 +25,9 @@ ul {
 // these are temporary until we have proper projects list
 // otherwise they should be in custom components instead
 .list--blocky > .list__item--warning {
-    background-color: $panel-bg-warning;
+    background-color: $accent-bg-warning;
 }
 
 .list--blocky > .list__item--failure {
-    background-color: $panel-bg-failure;
+    background-color: $accent-bg-failure;
 }
