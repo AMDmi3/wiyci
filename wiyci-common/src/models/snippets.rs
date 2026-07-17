@@ -22,6 +22,8 @@ use strum::{EnumString, IntoStaticStr};
 pub enum SnippetKind {
     CompilerWarning,
     FailedTest,
+    PassedTest,
+    SkippedTest,
 }
 
 pub struct NewSnippet {

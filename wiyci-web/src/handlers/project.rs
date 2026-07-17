@@ -73,6 +73,14 @@ impl From<Log> for LogSummary {
                 .get(&SnippetKind::FailedTest)
                 .copied()
                 .unwrap_or_default();
+            counts.passed_tests = snippet_counts
+                .get(&SnippetKind::PassedTest)
+                .copied()
+                .unwrap_or_default();
+            counts.skipped_tests = snippet_counts
+                .get(&SnippetKind::SkippedTest)
+                .copied()
+                .unwrap_or_default();
         };
 
         let mut verdict = Verdict::NotParsed;
