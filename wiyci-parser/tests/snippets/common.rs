@@ -10,8 +10,8 @@ use itertools::Itertools as _;
 use wiyci_parser::{LogParser, SnippetHandler, snippets::*};
 
 #[derive(Default)]
-struct SnippetSaver {
-    snippets: Vec<Snippet>,
+pub struct SnippetSaver {
+    pub snippets: Vec<Snippet>,
 }
 
 impl SnippetHandler for SnippetSaver {

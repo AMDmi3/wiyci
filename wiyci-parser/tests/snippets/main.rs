@@ -2,5 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 mod common;
+mod ctest;
+mod gtest;
 mod pytest;
 mod warnings;
