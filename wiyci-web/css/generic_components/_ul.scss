@@ -22,6 +22,10 @@ ul {
     background-color: $nav-bg;
 }
 
+.list--blocky > .list__item a:link, .list--blocky > .list__item a:visited {
+	color: $link-fg-on-color;
+}
+
 // these are temporary until we have proper projects list
 // otherwise they should be in custom components instead
 .list--blocky > .list__item--warning {

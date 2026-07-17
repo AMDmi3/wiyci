@@ -25,6 +25,10 @@
 	background-color: $accent-bg-default;
 }
 
+.log-panel a:link, .log-panel a:visited {
+	color: $link-fg-on-color;
+}
+
 .log-panel h3 {
 	margin: 0;
 	font-size: inherit;

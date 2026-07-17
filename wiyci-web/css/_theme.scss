@@ -17,6 +17,7 @@ $main-fg: light-dark($zinc-750, $zinc-200);
 $main-bg: light-dark($white, #{color.mix($slate-950, $slate-900)});
 
 $link-fg: light-dark($azure-550, $azure-350);
+$link-fg-on-color: light-dark($azure-550, $zinc-200);
 
 $dim-fg: light-dark($zinc-600, $zinc-300);
 
