@@ -3,4 +3,5 @@
 
 mod common;
 mod features;
+mod operation;
 mod snippets;

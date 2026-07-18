@@ -1,14 +1,17 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::io::Cursor;
+use std::io::{BufReader, Cursor};
 use std::ops::ControlFlow;
 
 use indoc::indoc;
 
-use wiyci_parser::{LogParser, SnippetHandler, snippets::Snippet};
+use wiyci_parser::{
+    LogParser, SnippetHandler,
+    snippets::{Snippet, TestResult},
+};
 
-use crate::common::parse_snippets;
+use crate::common::SnippetSaver;
 
 const SAMPLE: &str = indoc! {"
     main.py::foo FAILED [  0%]
@@ -105,13 +108,16 @@ fn test_unicalize_not() {
     let mut saver = SnippetSaver::default();
 
     LogParser::default()
-        .parse(BufReader::new(Cursor::new(indoc! {r#"
+        .parse(
+            BufReader::new(Cursor::new(indoc! {r#"
             [       OK ] Foo (0 ms)
             [       OK ] Foo (0 ms)
             [       OK ] Foo (0 ms)
             [       OK ] Bar (0 ms)
             [       OK ] Bar (0 ms)
-        "#})), &mut saver)
+        "#})),
+            &mut saver,
+        )
         .expect("parsing failed");
 
     assert_eq!(saver.snippets.len(), 5);
@@ -123,14 +129,44 @@ fn test_unicalize() {
 
     LogParser::default()
         .with_unicalize(true)
-        .parse(BufReader::new(Cursor::new(indoc! {r#"
+        .parse(
+            BufReader::new(Cursor::new(indoc! {r#"
             [       OK ] Foo (0 ms)
             [       OK ] Foo (0 ms)
             [       OK ] Foo (0 ms)
             [       OK ] Bar (0 ms)
             [       OK ] Bar (0 ms)
-        "#})), &mut saver)
+        "#})),
+            &mut saver,
+        )
         .expect("parsing failed");
 
     assert_eq!(saver.snippets.len(), 2);
+}
+
+#[test]
+#[ignore]
+fn test_preserves_snippet_order() {
+    let mut saver = SnippetSaver::default();
+
+    LogParser::default()
+        .with_unicalize(true)
+        .parse(
+            BufReader::new(Cursor::new(indoc! {r#"
+            [       OK ] 0 (0 ms)
+            [       OK ] 1 (0 ms)
+            [       OK ] 2 (0 ms)
+            [       OK ] 3 (0 ms)
+            [       OK ] 4 (0 ms)
+        "#})),
+            &mut saver,
+        )
+        .expect("parsing failed");
+
+    let texts: Vec<String> = saver
+        .snippets
+        .into_iter()
+        .map(|snippet| TestResult::try_from(snippet).unwrap().name)
+        .collect();
+    assert_eq!(texts, ["0", "1", "2", "3", "4"]);
 }
