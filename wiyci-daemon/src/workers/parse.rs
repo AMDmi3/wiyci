@@ -17,10 +17,11 @@ use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
 // Bump this on each pasing logic change to reparse stored logs
-const VERSION: u32 = LogParser::VERSION + 1;
+const VERSION: u32 = LogParser::VERSION + 2;
 
 const MAX_PARSED_LINE_LENGTH: Option<usize> = Some(10240);
 const MAX_PARSED_SNIPPETS_PER_KIND: Option<u64> = Some(1000);
+const UNICALIZE_SNIPPETS: bool = true;
 
 pub struct ParseWorker {
     pool: PgPool,
@@ -36,7 +37,9 @@ impl ParseWorker {
         let (status, snippets, counts) = {
             let id = log.id;
             let storage = self.storage.clone();
-            let parser = LogParser::default().with_max_line_length(MAX_PARSED_LINE_LENGTH);
+            let parser = LogParser::default()
+                .with_unicalize(UNICALIZE_SNIPPETS)
+                .with_max_line_length(MAX_PARSED_LINE_LENGTH);
             tokio::task::spawn_blocking(move || -> anyhow::Result<_> {
                 let mut processor = snippets::SnippetProcessor::default()
                     .with_max_snippets_per_kind(MAX_PARSED_SNIPPETS_PER_KIND);
