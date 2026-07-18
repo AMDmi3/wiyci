@@ -4505,6 +4505,7 @@ dependencies = [
 name = "wiyci-parser"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "indoc",
  "insta",
  "itertools 0.15.0",

@@ -7,7 +7,7 @@ mod lines;
 mod matching;
 pub mod snippets;
 
-use std::collections::HashSet;
+use indexmap::IndexSet;
 use std::io::BufRead;
 use std::ops::ControlFlow;
 
@@ -39,7 +39,7 @@ pub trait SnippetHandler {
 struct SnippetAppender<'a, T> {
     unicalize: bool,
     receiver: &'a mut T,
-    pending_snippets: HashSet<Snippet>,
+    pending_snippets: IndexSet<Snippet>,
 }
 
 impl<'a, T> SnippetAppender<'a, T>
@@ -76,7 +76,7 @@ where
 
 impl LogParser {
     // Bump this on each change of parser output, so the daemon could reparse stored logs
-    pub const VERSION: u32 = 6;
+    pub const VERSION: u32 = 7;
 
     pub fn with_max_line_length(mut self, max_line_length: Option<usize>) -> Self {
         self.max_line_length = max_line_length;

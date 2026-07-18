@@ -145,7 +145,6 @@ fn test_unicalize() {
 }
 
 #[test]
-#[ignore]
 fn test_preserves_snippet_order() {
     let mut saver = SnippetSaver::default();
 
