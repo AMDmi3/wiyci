@@ -7,7 +7,9 @@ mod lines;
 mod matching;
 pub mod snippets;
 
+use std::collections::HashSet;
 use std::io::BufRead;
+use std::ops::ControlFlow;
 
 use crate::lines::SafeLines;
 use crate::matching::common::SnippetMatchResult;
@@ -27,10 +29,49 @@ pub struct ParseStatus {
 pub struct LogParser {
     max_line_length: Option<usize>,
     max_lines: Option<u64>,
+    unicalize: bool,
 }
 
 pub trait SnippetHandler {
-    fn handle_snippet(&mut self, snippet: Snippet) -> std::ops::ControlFlow<(), ()>;
+    fn handle_snippet(&mut self, snippet: Snippet) -> ControlFlow<()>;
+}
+
+struct SnippetAppender<'a, T> {
+    unicalize: bool,
+    receiver: &'a mut T,
+    pending_snippets: HashSet<Snippet>,
+}
+
+impl<'a, T> SnippetAppender<'a, T>
+where
+    T: SnippetHandler,
+{
+    pub fn new(receiver: &'a mut T, unicalize: bool) -> Self {
+        Self {
+            unicalize,
+            receiver,
+            pending_snippets: Default::default(),
+        }
+    }
+
+    pub fn append(&mut self, snippet: Snippet) -> ControlFlow<()> {
+        if self.unicalize {
+            self.pending_snippets.insert(snippet);
+            ControlFlow::Continue(())
+        } else {
+            self.receiver.handle_snippet(snippet)
+        }
+    }
+
+    pub fn flush(self) -> ControlFlow<()> {
+        for snippet in self.pending_snippets {
+            let flow = self.receiver.handle_snippet(snippet);
+            if flow.is_break() {
+                return flow;
+            }
+        }
+        ControlFlow::Continue(())
+    }
 }
 
 impl LogParser {
@@ -47,6 +88,11 @@ impl LogParser {
         self
     }
 
+    pub fn with_unicalize(mut self, unicalize: bool) -> Self {
+        self.unicalize = unicalize;
+        self
+    }
+
     pub fn parse(
         &self,
         reader: impl BufRead,
@@ -55,6 +101,7 @@ impl LogParser {
         let lines = SafeLines::new(reader).with_max_line_length(self.max_line_length);
         let mut status = ParseStatus::default();
         let mut current_matchers = vec![];
+        let mut appender = SnippetAppender::new(receiver, self.unicalize);
 
         for line in lines {
             let line = line?;
@@ -77,7 +124,7 @@ impl LogParser {
                     && match matcher.match_line(&line) {
                         SnippetMatchResult::NoMatch => false,
                         SnippetMatchResult::Complete(snippet) => {
-                            if receiver.handle_snippet(snippet).is_break() {
+                            if appender.append(snippet).is_break() {
                                 status.is_interrupted = true;
                             }
                             false
@@ -95,11 +142,15 @@ impl LogParser {
         for mut matcher in current_matchers {
             if !status.is_interrupted
                 && let SnippetMatchResult::Complete(snippet) = matcher.flush()
-                && receiver.handle_snippet(snippet).is_break()
+                && appender.append(snippet).is_break()
             {
                 status.is_interrupted = true;
                 break;
             }
+        }
+
+        if appender.flush().is_break() {
+            status.is_interrupted = true;
         }
 
         Ok(status)

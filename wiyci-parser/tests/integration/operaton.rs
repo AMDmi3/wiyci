@@ -8,6 +8,8 @@ use indoc::indoc;
 
 use wiyci_parser::{LogParser, SnippetHandler, snippets::Snippet};
 
+use crate::common::parse_snippets;
+
 const SAMPLE: &str = indoc! {"
     main.py::foo FAILED [  0%]
     main.py::bar FAILED [  1%]
@@ -96,4 +98,39 @@ fn test_max_line_length_triggered() {
         .unwrap();
 
     assert_eq!(res.num_truncated_lines, 1);
+}
+
+#[test]
+fn test_unicalize_not() {
+    let mut saver = SnippetSaver::default();
+
+    LogParser::default()
+        .parse(BufReader::new(Cursor::new(indoc! {r#"
+            [       OK ] Foo (0 ms)
+            [       OK ] Foo (0 ms)
+            [       OK ] Foo (0 ms)
+            [       OK ] Bar (0 ms)
+            [       OK ] Bar (0 ms)
+        "#})), &mut saver)
+        .expect("parsing failed");
+
+    assert_eq!(saver.snippets.len(), 5);
+}
+
+#[test]
+fn test_unicalize() {
+    let mut saver = SnippetSaver::default();
+
+    LogParser::default()
+        .with_unicalize(true)
+        .parse(BufReader::new(Cursor::new(indoc! {r#"
+            [       OK ] Foo (0 ms)
+            [       OK ] Foo (0 ms)
+            [       OK ] Foo (0 ms)
+            [       OK ] Bar (0 ms)
+            [       OK ] Bar (0 ms)
+        "#})), &mut saver)
+        .expect("parsing failed");
+
+    assert_eq!(saver.snippets.len(), 2);
 }
