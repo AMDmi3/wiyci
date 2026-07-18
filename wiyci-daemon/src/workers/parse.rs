@@ -50,9 +50,9 @@ impl ParseWorker {
             .await??
         };
 
-        for (kind, count) in &counts {
-            let kind: &'static str = kind.into();
-            counter!("wiyci_daemon_parse_used_snippets_total", "kind" => kind).increment(*count);
+        for snippet in &snippets {
+            let kind: &'static str = (&snippet.kind).into();
+            counter!("wiyci_daemon_parse_used_snippets_total", "kind" => kind).increment(1);
         }
 
         let parsed = ParsedLog {
