@@ -6,3 +6,4 @@ pub mod logs;
 pub mod projects;
 pub mod snippets;
 pub mod statistics;
+pub mod versions;
