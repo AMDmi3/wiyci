@@ -22,6 +22,7 @@ pub struct PollingWorkerRunner<Task, GetTaskFn, ProcessTaskFn> {
     retry_wait: Duration,
 }
 
+#[allow(unused)]
 impl<Task, Error, GetTaskFn, ProcessTaskFn> PollingWorkerRunner<Task, GetTaskFn, ProcessTaskFn>
 where
     Error: std::fmt::Display,
@@ -39,19 +40,16 @@ where
         }
     }
 
-    #[allow(unused)]
     pub fn with_task_wait(mut self, wait: Duration) -> Self {
         self.task_wait = wait;
         self
     }
 
-    #[allow(unused)]
     pub fn with_retry_wait(mut self, wait: Duration) -> Self {
         self.retry_wait = wait;
         self
     }
 
-    #[allow(unused)]
     pub fn with_span(mut self, span_from_task_fn: fn(&Task) -> Span) -> Self {
         self.span_from_task_fn = Some(span_from_task_fn);
         self
