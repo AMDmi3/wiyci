@@ -113,3 +113,63 @@ where
         }
     }
 }
+
+pub struct PeriodicWorkerRunner<IterationFn> {
+    name: &'static str,
+    iteration_fn: IterationFn,
+    period: Duration,
+    retry_wait: Duration,
+}
+
+#[allow(unused)]
+impl<Error, IterationFn> PeriodicWorkerRunner<IterationFn>
+where
+    Error: std::fmt::Display,
+    IterationFn: AsyncFn() -> Result<(), Error>,
+{
+    pub fn new(name: &'static str, iteration_fn: IterationFn, period: Duration) -> Self {
+        Self {
+            name,
+            iteration_fn,
+            period,
+            retry_wait: DEFAULT_RETRY_WAIT,
+        }
+    }
+
+    pub fn with_retry_wait(mut self, wait: Duration) -> Self {
+        self.retry_wait = wait;
+        self
+    }
+
+    pub async fn run(&self) -> Result<(), Error>
+    where
+        Error: std::fmt::Display,
+        IterationFn: AsyncFn() -> Result<(), Error>,
+    {
+        loop {
+            let start = Instant::now();
+
+            debug!("start iteration");
+            let res = (self.iteration_fn)().await;
+
+            let duration = Instant::now()
+                .saturating_duration_since(start)
+                .as_secs_f64();
+            histogram!("wiyci_daemon_worker_run_duration_seconds", "worker" => self.name)
+                .record(duration);
+
+            match &res {
+                Err(error) => {
+                    counter!("wiyci_daemon_worker_runs_total", "worker" => self.name, "status" => "failure").increment(1);
+                    error!(%error, "error in iteration");
+                    tokio::time::sleep(self.retry_wait).await;
+                }
+                Ok(..) => {
+                    debug!("done iteration");
+                    counter!("wiyci_daemon_worker_runs_total", "worker" => self.name, "status" => "success").increment(1);
+                    tokio::time::sleep_until((start + self.period).into()).await;
+                }
+            }
+        }
+    }
+}

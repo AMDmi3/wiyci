@@ -3,11 +3,13 @@
 
 mod discover;
 mod fetch;
+mod metrics;
 mod parse;
 mod update;
 mod util;
 
 pub use discover::*;
 pub use fetch::*;
+pub use metrics::*;
 pub use parse::*;
 pub use update::*;
