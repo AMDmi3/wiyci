@@ -43,7 +43,6 @@ pub async fn update_snippet_counts(
                   , (
                         SELECT jsonb_object_agg(key, value)
                           FROM max_counts
-                         GROUP BY key
                     )
         ON CONFLICT (project_name, version)
           DO UPDATE
