@@ -36,3 +36,19 @@ fn test_cc_simple() {
         ],
     );
 }
+
+#[test]
+fn test_xs() {
+    let snippet: CompilerWarning = parse_snippet(indoc! {r#"
+        Util.xs: In function 'XS_NetAddr__IP__Util_comp128':
+        Util.xs:501:17: warning: format '%d' expects argument of type 'int', but argument 4 has type 'STRLEN' {aka 'long unsigned int'} [-Wformat=]
+          501 |           croak("Bad arg length for %s%s, length is %d, should be %d",
+              |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          502 |                 "NetAddr::IP::Util::",subname,len *8,128);
+              |                                               ~~~~~~
+              |                                                   |
+              |                                                   STRLEN {aka long unsigned int}
+    "#});
+
+    assert_eq!(snippet.path, "Util.xs");
+}

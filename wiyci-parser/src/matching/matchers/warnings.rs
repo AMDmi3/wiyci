@@ -13,7 +13,7 @@ use crate::snippets::{CompilerWarning, Snippet};
 // XXX: is position (second number after path) mandatory?
 // Note: the regex ensures line number fits into any 32 bit integer
 static WARNING_PATTERN: &str =
-    r"^(.*\.(?:c|cc|cxx|cpp|cc|h|hh|hpp|hxx)):([0-9]{1,9}):[0-9]+: (warning: .* \[(-W.*)\])$";
+    r"^(.*\.(?:c|cc|cxx|cpp|cc|h|hh|hpp|hxx|xs)):([0-9]{1,9}):[0-9]+: (warning: .* \[(-W.*)\])$";
 static WARNING_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(WARNING_PATTERN).unwrap());
 
 static QUOTED_CODE_PATTERN: &str = r"^[ ]{1,5}([0-9]{0,4}) \| (.*)$";
