@@ -35,23 +35,23 @@ impl CompilerWarning {
             lines,
             path: details.path,
             line_number: details.line_number,
-            category: details.category,
+            category: Some(details.category),
             message: details.message,
         }
     }
 }
 
 #[derive(Default)]
-pub struct CompilerWarningMatcher {
+pub struct CCompilerWarningMatcher {
     lines: Vec<String>,
     details: Option<Details>,
 }
 
-impl CompilerWarningMatcher {
+impl CCompilerWarningMatcher {
     pub const TASTE_PATTERN: &str = WARNING_PATTERN;
 }
 
-impl SnippetMatcher for CompilerWarningMatcher {
+impl SnippetMatcher for CCompilerWarningMatcher {
     fn match_line(&mut self, line: &str) -> SnippetMatchResult {
         // TODO: Could consume `in function XXX` message which may come before the warning
         // TODO: Could consume more stuff, such as `In file included from ...` and `note:` blocks

@@ -18,7 +18,7 @@ fn test_cc_simple() {
 
     assert_eq!(snippet.path, "1.cc");
     assert_eq!(snippet.line_number, 1);
-    assert_eq!(snippet.category, "-Wreturn-type");
+    assert_eq!(snippet.category.as_deref(), Some("-Wreturn-type"));
     assert_eq!(
         snippet.message,
         "warning: no return statement in function returning non-void [-Wreturn-type]"

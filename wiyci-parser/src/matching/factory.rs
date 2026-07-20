@@ -36,5 +36,6 @@ snippet_matcher_factory! {
     GtestTestResultMatcher,
     PytestTestResultMatcher,
     PytestTestSkippedResultMatcher,
-    CompilerWarningMatcher,
+    CCompilerWarningMatcher,
+    RustCompilerWarningMatcher,
 }

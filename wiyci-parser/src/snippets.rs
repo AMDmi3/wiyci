@@ -8,7 +8,7 @@ pub struct CompilerWarning {
     pub lines: Vec<String>,
     pub path: String,
     pub line_number: u32,
-    pub category: String,
+    pub category: Option<String>,
     pub message: String,
 }
 
