@@ -10,7 +10,7 @@ use wiyci_common::db;
 
 use crate::workers::util::PeriodicWorkerRunner;
 
-const PERIOD: Duration = Duration::from_secs(10);
+const PERIOD: Duration = Duration::from_secs(60);
 
 pub struct MetricsWorker {
     pool: PgPool,
@@ -26,6 +26,21 @@ impl MetricsWorker {
 
         gauge!("wiyci_daemon_statistics_stored_logs_size_bytes")
             .set(statistics.stored_logs_size as f64);
+
+        let statistics = db::statistics::get_snippet_counts(&self.pool).await?;
+
+        gauge!("wiyci_daemon_statistics_total_projects").set(statistics.num_projects as f64);
+
+        for (kind, count) in statistics.num_snippets {
+            let kind: &'static str = (&kind).into();
+            gauge!("wiyci_daemon_statistics_total_snippets", "kind" => kind).set(count as f64);
+        }
+
+        for (kind, count) in statistics.num_projects_by_snippet {
+            let kind: &'static str = (&kind).into();
+            gauge!("wiyci_daemon_statistics_total_projects_by_snippet", "kind" => kind)
+                .set(count as f64);
+        }
 
         Ok(())
     }
