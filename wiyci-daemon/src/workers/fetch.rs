@@ -205,7 +205,14 @@ impl FetchWorker {
             async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool).await?),
             async |task| self.fetch_log(task).await,
         )
-        .with_span(|task| info_span!("task", id = task.id, url = task.url))
+        .with_span(|task| {
+            info_span!(
+                "task",
+                id = task.id,
+                project_name = task.project_name,
+                url = task.url
+            )
+        })
         .run()
         .await
     }

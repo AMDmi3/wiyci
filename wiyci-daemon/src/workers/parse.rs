@@ -87,7 +87,7 @@ impl ParseWorker {
             async || Ok(db::logs::get_next_for_parsing(&self.pool, VERSION).await?),
             async |log| self.parse_log(log).await,
         )
-        .with_span(|log| info_span!("log", id = log.id))
+        .with_span(|log| info_span!("log", id = log.id, project_name = log.project_name))
         .run()
         .await
     }
