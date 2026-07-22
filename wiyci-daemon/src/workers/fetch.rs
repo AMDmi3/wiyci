@@ -175,12 +175,16 @@ impl FetchWorker {
                 )
                 .await?;
                 tx.commit().await?;
-                counter!("wiyci_daemon_fetch_logs_total", "status" => "success").increment(1);
+                counter!("wiyci_daemon_fetch_logs_total", "status" => "success", "attempt" => (task.num_attempts + 1).to_string()).increment(1);
                 counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
                 gauge!("wiyci_daemon_statistics_stored_logs_size_bytes")
                     .set(statistics.stored_logs_size as f64);
-                info!(size = new_log.size, "log fetched");
+                info!(
+                    size = new_log.size,
+                    attempt = task.num_attempts + 1,
+                    "log fetched"
+                );
             }
             FetchStatus::Reject(reject) => {
                 db::fetch_tasks::register_failure(
@@ -190,7 +194,7 @@ impl FetchWorker {
                     calc_retry_interval(task.num_attempts),
                 )
                 .await?;
-                counter!("wiyci_daemon_fetch_logs_total", "status" => "reject").increment(1);
+                counter!("wiyci_daemon_fetch_logs_total", "status" => "reject", "attempt" => (task.num_attempts + 1).to_string()).increment(1);
                 warn!(%reject, "log fetch failed");
             }
         }
