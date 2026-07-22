@@ -51,12 +51,16 @@ async fn main() -> anyhow::Result<()> {
     let fetch = workers::FetchWorker::new(pool.clone(), client.clone(), storage.clone());
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
+    let remove_logs = workers::RemoveLogsWorker::new(pool.clone(), storage.clone());
+    let expire_logs = workers::ExpireLogsWorker::new(pool.clone());
     tokio::try_join!(
         discover.run(),
         update.run(),
         fetch.run(),
         parse.run(),
-        metrics.run()
+        metrics.run(),
+        remove_logs.run(),
+        expire_logs.run(),
     )
     .context("worker finished with error")?;
 

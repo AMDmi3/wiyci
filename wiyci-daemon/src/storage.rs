@@ -37,7 +37,6 @@ impl LogStorage {
         std::fs::File::create(path)
     }
 
-    #[cfg_attr(not(test), expect(unused))]
     pub fn remove(&self, id: u64) -> std::io::Result<()> {
         match std::fs::remove_file(self.make_path(id)) {
             Err(e) if e.kind() == ErrorKind::NotFound => Ok(()),

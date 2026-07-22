@@ -7,7 +7,7 @@ use indoc::indoc;
 use sqlx::{FromRow, Postgres, types::Json};
 use time::OffsetDateTime;
 
-use crate::models::logs::{Log, NewLog, ParsedLog};
+use crate::models::logs::{Log, LogRemovalTask, NewLog, ParsedLog};
 
 pub async fn create(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
@@ -174,4 +174,84 @@ pub async fn get_by_id(
 
     tx.commit().await?;
     Ok(log.map(|log| log.into()))
+}
+
+#[derive(FromRow)]
+pub struct DbLogRemovalTask {
+    pub id: i32,
+    pub size: i32,
+    pub created_at: OffsetDateTime,
+}
+
+impl From<DbLogRemovalTask> for LogRemovalTask {
+    fn from(db: DbLogRemovalTask) -> Self {
+        Self {
+            id: db.id,
+            size: db.size as u64,
+            created_at: db.created_at,
+        }
+    }
+}
+
+pub async fn get_next_for_removal(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+) -> sqlx::Result<Option<LogRemovalTask>> {
+    let mut tx = conn.begin().await?;
+
+    let task: Option<DbLogRemovalTask> = sqlx::query_as(indoc! {r#"
+          SELECT *
+            FROM logs_to_remove
+           LIMIT 1
+    "#})
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(task.map(|task| task.into()))
+}
+
+pub async fn confirm_removal(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    id: i32,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
+    sqlx::query(indoc! {r#"
+        DELETE
+          FROM logs_to_remove
+         WHERE id = $1
+    "#})
+    .bind(id)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(())
+}
+
+pub async fn expire_obsolete(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+) -> sqlx::Result<()> {
+    let mut tx = conn.begin().await?;
+
+    sqlx::query(indoc! {r#"
+        DELETE 
+          FROM logs AS obsolete
+         WHERE fetch_task_id IS NULL
+           AND FALSE -- TODO: enable after testing
+           AND EXISTS (
+                   SELECT *
+                     FROM logs AS actual
+                    WHERE fetch_task_id IS NOT NULL
+                      AND actual.project_name = obsolete.project_name
+                      AND actual.variant = obsolete.variant
+                      AND actual.source_pkgname IS NOT DISTINCT FROM obsolete.source_pkgname
+                      AND actual.binary_pkgname IS NOT DISTINCT FROM obsolete.binary_pkgname
+               );
+    "#})
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(())
 }
