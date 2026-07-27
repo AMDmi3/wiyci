@@ -23,11 +23,11 @@ use crate::storage::LogStorage;
 use crate::util::duration::DurationExt as _;
 use crate::workers::util::PollingWorkerRunner;
 
-const MAX_ATTEMPTS: u32 = 5;
+const MAX_ATTEMPTS: u32 = 7;
 const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
 
 const RETRY_PERIOD_BASE: Duration = Duration::from_days(1);
-const RETRY_PERIOD_MULTIPLIER: f64 = 1.5;
+const RETRY_PERIOD_MULTIPLIER: f64 = 2.0;
 const RETRY_PERIOD_JITTER: f64 = 0.1;
 
 fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
