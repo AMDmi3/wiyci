@@ -15,7 +15,7 @@ static STATIC_FILES_RAW: Dir = include_dir!("$CARGO_MANIFEST_DIR/static");
 pub static STATIC_FILES: LazyLock<StaticFiles> =
     LazyLock::new(|| StaticFiles::new(&STATIC_FILES_RAW));
 
-#[allow(semicolon_in_expressions_from_macros)]
+#[allow(semicolon_in_expressions_from_non_local_macros)]
 static CSS: &str = grass::include!("wiyci-web/css/main.scss");
 
 pub struct StaticFile {
