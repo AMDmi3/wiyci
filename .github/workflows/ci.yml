@@ -7,7 +7,7 @@ on:
 env:
   POSTGRESQL: 18
   RUSTFLAGS: -Dwarnings
-  RUST: nightly-2026-07-06
+  RUST: nightly-2026-07-27
 jobs:
   check:
     runs-on: ubuntu-latest
