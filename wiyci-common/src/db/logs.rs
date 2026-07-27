@@ -238,7 +238,6 @@ pub async fn expire_obsolete(
         DELETE 
           FROM logs AS obsolete
          WHERE fetch_task_id IS NULL
-           AND FALSE -- TODO: enable after testing
            AND EXISTS (
                    SELECT *
                      FROM logs AS actual
