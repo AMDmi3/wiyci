@@ -76,6 +76,8 @@ impl UpdateWorker {
             update_period,
         )
         .await?;
+        // update latest_snippet_counts which depends on latest_versions which may've changed
+        db::projects::update_snippet_counts(&mut tx, &project.name).await?;
         tx.commit().await?;
 
         counter!("wiyci_daemon_update_projects_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);

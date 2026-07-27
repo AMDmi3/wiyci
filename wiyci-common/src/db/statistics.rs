@@ -78,7 +78,7 @@ pub async fn get_snippet_counts(
                        key::TEXT,
                        value::INTEGER
                   FROM projects
-                     , jsonb_each(snippet_counts) AS _(key, value)
+                     , jsonb_each(max_snippet_counts) AS _(key, value)
             )
           , aggregated AS (
                 SELECT key

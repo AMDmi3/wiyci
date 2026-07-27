@@ -14,6 +14,7 @@ pub struct Project {
     pub num_tasks: u32,
     pub next_update_at: OffsetDateTime,
     pub last_updated_at: Option<OffsetDateTime>,
-    pub snippet_counts: HashMap<SnippetKind, u64>,
+    pub max_snippet_counts: HashMap<SnippetKind, u64>,
+    pub latest_snippet_counts: HashMap<SnippetKind, u64>,
     pub latest_versions: HashSet<String>,
 }

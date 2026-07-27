@@ -9,6 +9,7 @@ use sqlx::{FromRow, Postgres, types::Json};
 use time::OffsetDateTime;
 
 use crate::models::projects::Project;
+use crate::models::snippets::SnippetKind;
 
 pub async fn create(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
@@ -65,8 +66,20 @@ pub struct DbProject {
     pub num_tasks: i32,
     pub next_update_at: OffsetDateTime,
     pub last_updated_at: Option<OffsetDateTime>,
-    pub snippet_counts: Option<Json<HashMap<String, u64>>>,
+    pub max_snippet_counts: Option<Json<HashMap<String, u64>>>,
+    pub latest_snippet_counts: Option<Json<HashMap<String, u64>>>,
     pub latest_versions: Option<Vec<String>>,
+}
+
+fn convert_snippet_counts(input: Option<Json<HashMap<String, u64>>>) -> HashMap<SnippetKind, u64> {
+    input
+        .map(|json| {
+            json.into_inner()
+                .into_iter()
+                .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 impl From<DbProject> for Project {
@@ -77,15 +90,8 @@ impl From<DbProject> for Project {
             num_tasks: db.num_tasks as u32,
             next_update_at: db.next_update_at,
             last_updated_at: db.last_updated_at,
-            snippet_counts: db
-                .snippet_counts
-                .map(|json| {
-                    json.into_inner()
-                        .into_iter()
-                        .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
-                        .collect()
-                })
-                .unwrap_or_default(),
+            max_snippet_counts: convert_snippet_counts(db.max_snippet_counts),
+            latest_snippet_counts: convert_snippet_counts(db.latest_snippet_counts),
             latest_versions: db
                 .latest_versions
                 .map(|versions| versions.into_iter().collect())
@@ -262,17 +268,33 @@ pub async fn update_snippet_counts(
 
     sqlx::query(indoc! {"
         WITH
-            new_counts AS (
+            max_counts AS (
                 SELECT key
                      , MAX(value::BIGINT) AS value
-                  FROM logs, jsonb_each(parsed_snippet_counts) AS counts(key, value)
+                  FROM logs, jsonb_each(parsed_snippet_counts) AS _(key, value)
                  WHERE project_name = $1
                  GROUP BY key
             )
+          , latest_counts AS (
+                SELECT key
+                     , MAX(value::BIGINT) AS value
+                  FROM logs, jsonb_each(parsed_snippet_counts) AS _(key, value)
+                 WHERE project_name = $1
+                   AND version IN (
+                           SELECT unnest(latest_versions)
+                             FROM projects
+                            WHERE name = $1
+                       )
+                 GROUP BY key
+            )
         UPDATE projects
-           SET snippet_counts = (
+           SET max_snippet_counts = (
                    SELECT jsonb_object_agg(key, value)
-                     FROM new_counts
+                     FROM max_counts
+               )
+             , latest_snippet_counts = (
+                   SELECT jsonb_object_agg(key, value)
+                     FROM latest_counts
                )
          WHERE projects.name = $1
     "})
