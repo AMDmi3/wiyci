@@ -13,6 +13,7 @@ use tracing::{info, info_span};
 use wiyci_common::api;
 use wiyci_common::db;
 use wiyci_common::models::projects::Project;
+use wiyci_common::models::repology::RepologyPackage;
 
 use crate::HttpClient;
 use crate::util::duration::DurationExt;
@@ -21,6 +22,17 @@ use crate::workers::util::PollingWorkerRunner;
 const ACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(1);
 const INACTIVE_PROJECT_UPDATE_PERIOD: Duration = Duration::from_days(7);
 const UPDATE_PERIOD_JITTER: f64 = 0.1;
+
+fn get_latest_versions(packages: &[RepologyPackage]) -> Vec<&str> {
+    let mut res: Vec<&str> = packages
+        .iter()
+        .filter(|package| package.status == "newest")
+        .map(|package| package.version.as_str())
+        .collect();
+    res.sort_unstable();
+    res.dedup();
+    res
+}
 
 pub struct UpdateWorker {
     pool: PgPool,
@@ -43,6 +55,7 @@ impl UpdateWorker {
             api::repology::fetch_project_packages(&self.client, &project.name).await?;
 
         let tasks = tasks::generate_tasks(&repology_packages);
+        let latest_versions = get_latest_versions(&repology_packages);
 
         let update_period = if tasks.is_empty() {
             INACTIVE_PROJECT_UPDATE_PERIOD
@@ -55,8 +68,14 @@ impl UpdateWorker {
 
         let mut tx = self.pool.begin().await?;
         db::fetch_tasks::update_tasks_for_project(&mut tx, &project.name, &tasks).await?;
-        db::projects::register_update(&mut tx, &project.name, tasks.len() as u32, update_period)
-            .await?;
+        db::projects::register_update(
+            &mut tx,
+            &project.name,
+            tasks.len() as u32,
+            &latest_versions,
+            update_period,
+        )
+        .await?;
         tx.commit().await?;
 
         counter!("wiyci_daemon_update_projects_total", "type" => if tasks.is_empty() { "inactive" } else { "active" }).increment(1);

@@ -34,6 +34,7 @@ pub async fn register_update(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
     name: &str,
     num_tasks: u32,
+    latest_versions: &[&str],
     update_period: Duration,
 ) -> sqlx::Result<()> {
     let mut tx = conn.begin().await?;
@@ -42,12 +43,14 @@ pub async fn register_update(
         UPDATE projects
            SET last_updated_at = now()
              , num_tasks = $2
+             , latest_versions = $4
              , next_update_at = now() + $3
          WHERE name = $1
     "})
     .bind(name)
     .bind(num_tasks as i32)
     .bind(update_period)
+    .bind(latest_versions)
     .execute(&mut *tx)
     .await?;
 
@@ -63,6 +66,7 @@ pub struct DbProject {
     pub next_update_at: OffsetDateTime,
     pub last_updated_at: Option<OffsetDateTime>,
     pub snippet_counts: Option<Json<HashMap<String, u64>>>,
+    pub latest_versions: Option<Vec<String>>,
 }
 
 impl From<DbProject> for Project {
@@ -81,6 +85,10 @@ impl From<DbProject> for Project {
                         .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
                         .collect()
                 })
+                .unwrap_or_default(),
+            latest_versions: db
+                .latest_versions
+                .map(|versions| versions.into_iter().collect())
                 .unwrap_or_default(),
         }
     }
