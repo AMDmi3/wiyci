@@ -39,6 +39,8 @@ impl BulkUpdateWorker {
         )
         .await?;
 
+        counter!("wiyci_daemon_repology_requests_total", "type" => "bulk").increment(1);
+
         let Some(last_project_name) = projects.keys().max() else {
             info!("update finished");
             db::bulk_update::finish_update(&self.pool, PERIOD).await?;

@@ -42,6 +42,8 @@ impl SingularUpdateWorker {
         let repology_packages =
             api::repology::fetch_project_packages(&self.client, &project.name).await?;
 
+        counter!("wiyci_daemon_repology_requests_total", "type" => "singular").increment(1);
+
         let tasks = generate_tasks(&repology_packages);
         let latest_versions = get_latest_versions(&repology_packages);
 
