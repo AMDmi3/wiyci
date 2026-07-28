@@ -54,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
     // - Change run() signature to take `self`, so we could fill vec of futures directly,
     // - Use JoinSet and spawn a task for each worker, moving worker into it
     // So instead hardcode the workers unconditionally, but allow to run them conditionaly.
-    let discover = workers::DiscoverWorker::new(pool.clone(), config.enable_discovery);
+    let preseed = workers::PreseedWorker::new(pool.clone());
     let update = workers::UpdateWorker::new(pool.clone(), client.clone());
     let fetch = workers::FetchWorker::new(pool.clone(), client.clone(), storage.clone());
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
     let expire_logs = workers::ExpireLogsWorker::new(pool.clone());
 
     let futures: Vec<Pin<Box<dyn Future<Output = anyhow::Result<()>>>>> = vec![
-        Box::pin(discover.run()),
+        Box::pin(preseed.run()),
         Box::pin(update.run()),
         Box::pin(fetch.run()),
         Box::pin(parse.run()),
