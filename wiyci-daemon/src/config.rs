@@ -73,12 +73,14 @@ pub struct CliArgs {
     #[arg(long)]
     storage_path: Option<PathBuf>,
 
-    /// Enable full-fledged project discovery
+    /// Enable bulk project update from repology
     ///
-    /// Unless this is enabled, just works with a small predefined set
-    /// of projects to avoid unexpectedly fetching gigabytes of logs.
+    /// Enabling this creates a significant load on Repology and sites hosting
+    /// the logs, so it should only be enabled on production instance. When it's
+    /// disabled, instance is still seeded with predefined set of lightweight
+    /// projects which should be enough to test it.
     #[arg(long)]
-    enable_discovery: bool,
+    enable_bulk_update: bool,
 }
 
 #[derive(Deserialize, Default)]
@@ -94,7 +96,7 @@ struct FileConfig {
     http_timeout: Option<f64>,
     http_delay: Option<f64>,
     storage_path: Option<PathBuf>,
-    enable_discovery: bool,
+    enable_bulk_update: bool,
 }
 
 #[derive(Debug)]
@@ -108,7 +110,7 @@ pub struct Config {
     pub http_timeout: Duration,
     pub http_delay: Duration,
     pub storage_path: PathBuf,
-    pub enable_discovery: bool,
+    pub enable_bulk_update: bool,
 }
 
 impl Config {
@@ -154,7 +156,7 @@ impl Config {
             storage_path: args.storage_path.or(config.storage_path).ok_or_else(|| {
                 anyhow!("missing required argument or config paramater \"storage-path\"")
             })?,
-            enable_discovery: args.enable_discovery || config.enable_discovery,
+            enable_bulk_update: args.enable_bulk_update || config.enable_bulk_update,
         })
     }
 }

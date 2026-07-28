@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #![feature(duration_constructors)]
+#![feature(const_trait_impl)]
+#![feature(const_ops)]
+#![feature(try_blocks)]
 #![cfg_attr(test, feature(coverage_attribute))]
 
 mod config;
@@ -55,22 +58,27 @@ async fn main() -> anyhow::Result<()> {
     // - Use JoinSet and spawn a task for each worker, moving worker into it
     // So instead hardcode the workers unconditionally, but allow to run them conditionaly.
     let preseed = workers::PreseedWorker::new(pool.clone());
-    let update = workers::UpdateWorker::new(pool.clone(), client.clone());
+    let singular_update = workers::SingularUpdateWorker::new(pool.clone(), client.clone());
+    let bulk_update = workers::BulkUpdateWorker::new(pool.clone(), client.clone());
     let fetch = workers::FetchWorker::new(pool.clone(), client.clone(), storage.clone());
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
     let remove_logs = workers::RemoveLogsWorker::new(pool.clone(), storage.clone());
     let expire_logs = workers::ExpireLogsWorker::new(pool.clone());
 
-    let futures: Vec<Pin<Box<dyn Future<Output = anyhow::Result<()>>>>> = vec![
+    let mut futures: Vec<Pin<Box<dyn Future<Output = anyhow::Result<()>>>>> = vec![
         Box::pin(preseed.run()),
-        Box::pin(update.run()),
+        Box::pin(singular_update.run()),
         Box::pin(fetch.run()),
         Box::pin(parse.run()),
         Box::pin(metrics.run()),
         Box::pin(remove_logs.run()),
         Box::pin(expire_logs.run()),
     ];
+
+    if config.enable_bulk_update {
+        futures.push(Box::pin(bulk_update.run()));
+    }
 
     futures::future::try_join_all(futures)
         .await
