@@ -68,12 +68,13 @@ impl UpdateWorker {
 
         let mut tx = self.pool.begin().await?;
         db::fetch_tasks::update_tasks_for_project(&mut tx, &project.name, &tasks).await?;
-        db::projects::register_update(
+        db::projects::create_or_update(
             &mut tx,
             &project.name,
             tasks.len() as u32,
             &latest_versions,
             update_period,
+            false,
         )
         .await?;
         // update latest_snippet_counts which depends on latest_versions which may've changed

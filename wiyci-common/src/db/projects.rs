@@ -31,29 +31,49 @@ pub async fn create(
     Ok(())
 }
 
-pub async fn register_update(
+pub async fn create_or_update(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
     name: &str,
     num_tasks: u32,
     latest_versions: &[&str],
     update_period: Duration,
+    allow_creation: bool,
 ) -> sqlx::Result<()> {
     let mut tx = conn.begin().await?;
 
-    sqlx::query(indoc! {"
-        UPDATE projects
-           SET last_updated_at = now()
-             , num_tasks = $2
-             , latest_versions = $4
-             , next_update_at = now() + $3
-         WHERE name = $1
-    "})
-    .bind(name)
-    .bind(num_tasks as i32)
-    .bind(update_period)
-    .bind(latest_versions)
-    .execute(&mut *tx)
-    .await?;
+    if allow_creation {
+        sqlx::query(indoc! {"
+            INSERT INTO projects(name, last_updated_at, num_tasks, latest_versions, next_update_at)
+                 VALUES ($1, now(), $2, $4, now() + $3)
+            ON CONFLICT (name)
+              DO UPDATE
+                    SET last_updated_at = EXCLUDED.last_updated_at
+                      , num_tasks = EXCLUDED.num_tasks
+                      , latest_versions = EXCLUDED.latest_versions
+                      , next_update_at = EXCLUDED.next_update_at
+        "})
+        .bind(name)
+        .bind(num_tasks as i32)
+        .bind(update_period)
+        .bind(latest_versions)
+        .execute(&mut *tx)
+        .await?;
+    } else {
+        sqlx::query(indoc! {"
+            UPDATE projects
+               SET last_updated_at = now()
+                 , num_tasks = $2
+                 , latest_versions = $4
+                 , next_update_at = now() + $3
+             WHERE name = $1
+        "})
+        .bind(name)
+        .bind(num_tasks as i32)
+        .bind(update_period)
+        .bind(latest_versions)
+        .execute(&mut *tx)
+        .await?;
+    }
 
     tx.commit().await?;
     Ok(())
