@@ -65,7 +65,10 @@ where
             let task = match (self.get_task_fn)().await {
                 Err(error) => {
                     counter!("wiyci_daemon_worker_runs_total", "worker" => self.name, "status" => "failure").increment(1);
-                    error!(%error, "error while polling for task");
+                    error!(
+                        error = format_args!("{:#}", error),
+                        "error while polling for task"
+                    );
                     tokio::time::sleep(self.retry_wait).await;
                     continue;
                 }
@@ -96,7 +99,7 @@ where
                 match &res {
                     Err(error) => {
                         counter!("wiyci_daemon_worker_runs_total", "worker" => self.name, "status" => "failure").increment(1);
-                        error!(%error, "error while processing task");
+                        error!(error = format_args!("{:#}", error), "error while processing task");
                     }
                     Ok(..) => {
                         debug!("done processing");
@@ -161,7 +164,7 @@ where
             match &res {
                 Err(error) => {
                     counter!("wiyci_daemon_worker_runs_total", "worker" => self.name, "status" => "failure").increment(1);
-                    error!(%error, "error in iteration");
+                    error!(error = format_args!("{:#}", error), "error in iteration");
                     tokio::time::sleep(self.retry_wait).await;
                 }
                 Ok(..) => {
