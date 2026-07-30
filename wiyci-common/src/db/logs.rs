@@ -246,7 +246,7 @@ pub async fn expire_obsolete(
                       AND actual.variant = obsolete.variant
                       AND actual.source_pkgname IS NOT DISTINCT FROM obsolete.source_pkgname
                       AND actual.binary_pkgname IS NOT DISTINCT FROM obsolete.binary_pkgname
-               );
+               )
     "#})
     .execute(&mut *tx)
     .await?;
