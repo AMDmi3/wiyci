@@ -17,8 +17,8 @@ use crate::workers::update::common::get_latest_versions;
 use crate::workers::update::tasks::generate_tasks;
 use crate::workers::util::PollingWorkerRunner;
 
-const PERIOD: Duration = Duration::from_days(1);
-const SINGULAR_UPDATE_FALLBACK_PERIOD: Duration = PERIOD * 2;
+const PERIOD: Duration = Duration::from_hours(8);
+const SINGULAR_UPDATE_FALLBACK_PERIOD: Duration = Duration::from_days(2); // depends on singular update period in fact
 const MIN_SPREAD: u32 = 31;
 
 pub struct BulkUpdateWorker {

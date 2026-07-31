@@ -3,7 +3,6 @@
 
 #![feature(duration_constructors)]
 #![feature(const_trait_impl)]
-#![feature(const_ops)]
 #![feature(try_blocks)]
 #![cfg_attr(test, feature(coverage_attribute))]
 
