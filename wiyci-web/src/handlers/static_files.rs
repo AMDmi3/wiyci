@@ -30,7 +30,7 @@ pub fn static_file_generic(file_name: &str, headers: HeaderMap) -> HandlerResult
     } else if let Some(file) = STATIC_FILES.by_orig_name(file_name) {
         (file, HttpCacheMode::ShortLived)
     } else {
-        return Ok((StatusCode::NOT_FOUND, "not found".to_owned()).into_response());
+        return Ok((StatusCode::NOT_FOUND, "Not found".to_owned()).into_response());
     };
 
     let content_type = match file_name.rsplit_once(".").map(|(_, ext)| ext).unwrap_or("") {
