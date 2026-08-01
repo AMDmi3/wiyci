@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1001
+content-length: 1002
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,7 +34,7 @@ content-length: 1001
 <h1>About</h1>
 
 
-<p>This is an example about page. Look for docs in the projects' repository</p>
+<p>This is an example about page. Look for docs in the project's repository.</p>
 
 
 </div></main>

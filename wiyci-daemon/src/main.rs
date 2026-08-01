@@ -55,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
     //   then futures::future::try_join_all these.
     // - Change run() signature to take `self`, so we could fill vec of futures directly,
     // - Use JoinSet and spawn a task for each worker, moving worker into it
-    // So instead hardcode the workers unconditionally, but allow to run them conditionaly.
+    // So instead hardcode the workers unconditionally, but allow to run them conditionally.
     let preseed = workers::PreseedWorker::new(pool.clone());
     let singular_update = workers::SingularUpdateWorker::new(pool.clone(), client.clone());
     let bulk_update = workers::BulkUpdateWorker::new(pool.clone(), client.clone());

@@ -37,7 +37,7 @@ impl SimplifiedCaptures for Captures<'_> {
     {
         self.get_str(i)
             .parse()
-            .expect("parasable value ensured by the regex")
+            .expect("parsable value ensured by the regex")
     }
 }
 

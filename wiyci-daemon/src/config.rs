@@ -154,7 +154,7 @@ impl Config {
                 .map(Duration::from_secs_f64)
                 .unwrap_or(DEFAULT_HTTP_DELAY),
             storage_path: args.storage_path.or(config.storage_path).ok_or_else(|| {
-                anyhow!("missing required argument or config paramater \"storage-path\"")
+                anyhow!("missing required argument or config parameter \"storage-path\"")
             })?,
             enable_bulk_update: args.enable_bulk_update || config.enable_bulk_update,
         })

@@ -79,7 +79,7 @@ impl SnippetMatcher for CCompilerWarningMatcher {
                     take(&mut self.lines),
                     self.details
                         .take()
-                        .expect("we're in !self.detauls.is_none() branch"),
+                        .expect("we're in !self.details.is_none() branch"),
                 ))
                 .into()
             }

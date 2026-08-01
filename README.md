@@ -23,7 +23,7 @@ This project requires latest Rust-nightly to build and PostgreSQL 17+ to run.
 
 2. Run the daemon
 
-   (note that you DSN may vary depending on postgresql settings)
+   (note that your DSN may vary depending on PostgreSQL settings)
 
    ```
    cargo run --bin wiyci-daemon -- --dsn postgresql://wiyci:wiyci@localhost/wiyci --storage-path /tmp/wiyci-logs

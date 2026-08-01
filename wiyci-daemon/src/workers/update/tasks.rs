@@ -46,7 +46,7 @@ fn filter_versions_by_desired<'a, 'b>(
     };
     loop {
         if current > *next_desired {
-            // version is past the next disired, advance desired
+            // version is past the next desired, advance desired
             match desired_versions.next() {
                 Some(v) => {
                     next_desired = v;

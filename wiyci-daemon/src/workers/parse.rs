@@ -16,7 +16,7 @@ use wiyci_parser::LogParser;
 use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
-// Bump this on each pasing logic change to reparse stored logs
+// Bump this on each parsing logic change to reparse stored logs
 const VERSION: u32 = LogParser::VERSION + 2;
 
 const MAX_PARSED_LINE_LENGTH: Option<usize> = Some(10240);

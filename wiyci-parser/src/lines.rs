@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn test_trucated_eol() {
+    fn test_truncated_eol() {
         let lines: Vec<_> = SafeLines::new(Cursor::new(b"foo\nbar"))
             .with_max_line_length(Some(3))
             .try_collect()
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn test_trucated_characters() {
+    fn test_truncated_characters() {
         let lines: Vec<_> = SafeLines::new(Cursor::new(b"foo\nbar"))
             .with_max_line_length(Some(2))
             .try_collect()
