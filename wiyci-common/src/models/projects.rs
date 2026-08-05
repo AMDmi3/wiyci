@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use time::OffsetDateTime;
 
@@ -16,5 +16,5 @@ pub struct Project {
     pub last_updated_at: Option<OffsetDateTime>,
     pub max_snippet_counts: HashMap<SnippetKind, u64>,
     pub latest_snippet_counts: HashMap<SnippetKind, u64>,
-    pub latest_versions: HashSet<String>,
+    pub latest_versions: Vec<String>,
 }
