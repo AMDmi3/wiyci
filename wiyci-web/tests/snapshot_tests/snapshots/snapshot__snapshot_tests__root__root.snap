@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 2824
+content-length: 2970
 
 <!DOCTYPE html>
 <html lang="en">
@@ -56,8 +56,11 @@ content-length: 2824
 </section>
 
 <section>
-	<h2>Browse projects</h2>
-	<p><a href="/projects">Go to projects</a></p>
+	<h2>Search projects</h2>
+	<form action="/projects" method="GET" class="search-form">
+		<input type="text" name="search" placeholder="project name, e.g. &quot;firefox&quot;">
+		<input type="submit" value="Go">
+	</form>
 </section>
 
 

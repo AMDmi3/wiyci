@@ -25,14 +25,11 @@
 </section>
 
 <section>
-	<h2>Browse projects</h2>
-	<p><a href="{{ crate::routes::Route::Projects.url_for().build()? }}">Go to projects</a></p>
-	{#- <!-- not really useful as long as the supported projects s is limited -->
-	<form action="{{ crate::routes::Route::Projects.url_for().build()? }}" method="GET">
-		<input type="text" name="search" placeholder="search project name">
-		<button type="submit">Go</button>
+	<h2>Search projects</h2>
+	<form action="{{ crate::routes::Route::Projects.url_for().build()? }}" method="GET" class="search-form">
+		<input type="text" name="search" placeholder="project name, e.g. &quot;firefox&quot;">
+		<input type="submit" value="Go">
 	</form>
-	#}
 </section>
 
 {%- if !recent_problematic_versions.is_empty() %}

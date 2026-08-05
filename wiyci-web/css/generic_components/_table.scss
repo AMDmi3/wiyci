@@ -1,4 +1,5 @@
 @use "../colors" as *;
+@use "../theme" as *;
 @use "sass:color";
 
 table {
@@ -8,31 +9,23 @@ table {
 	@media (width < 768px) { width: 100%; }
 }
 
-table.is-wide {
+.table--wide {
 	width: 100%;
 }
 
-th, td {
-	padding: 0.5rem 0.5rem;
-	border-bottom: 0.0625rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
-	text-align: left;
-}
-
-th.is-left, td.is-left {
-	text-align: left;
-}
-
-th.is-center, td.is-center {
-	text-align: center;
-}
-
-th.is-right, td.is-right {
-	text-align: right;
-}
-
-thead, tfoot {
+table {
 	th, td {
-		border-bottom: 0.1875rem solid light-dark(#{color.mix($slate-100, $slate-50)}, $slate-850);
-		font-weight: 600;
+		padding: 0.5rem 0.5rem;
+		border-bottom: 0.0625rem solid $line-fg;
+		text-align: left;
+	}
+}
+
+table {
+	thead, tfoot {
+		th, td {
+			border-bottom: 0.1875rem solid $line-fg;
+			font-weight: 600;
+		}
 	}
 }

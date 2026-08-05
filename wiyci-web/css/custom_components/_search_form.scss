@@ -1,0 +1,36 @@
+@use "../theme" as *;
+
+.search-form {
+	width: 100%;
+	display: flex;
+
+	> input {
+		flex: 1;
+		border: 1px solid $line-fg;
+		background-color: $input-bg;
+
+		&:focus {
+			z-index: 1;
+			position: relative;
+		}
+
+		&:first-child {
+			border-top-left-radius: .5rem;
+			border-bottom-left-radius: .5rem;
+		}
+
+		&:not(:first-child) {
+			margin-left: -1px;
+		}
+
+		&:last-child {
+			border-top-right-radius: .5rem;
+			border-bottom-right-radius: .5rem;
+		}
+
+		&[type="submit"] {
+			background-color: $button-bg;
+			flex: none;
+		}
+	}
+}

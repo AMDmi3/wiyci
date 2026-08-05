@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 1086
+content-length: 1600
 
 <!DOCTYPE html>
 <html lang="en">
@@ -34,13 +34,37 @@ content-length: 1086
 <h1>Projects</h1>
 
 
+<form action="/projects" method="GET" class="search-form">
+	<input type="text" name="search" placeholder="project name, e.g. &quot;firefox&quot;" value="">
+	<input type="submit" value="Go">
+</form>
 
-<ul class="list list--horizontal list--blocky">
-	<li class="list__item">
-		<a href="/project/firefox">firefox</a>
-	</li>
-</ul>
 
+<p>1 project found</p>
+<table class="projects-table">
+	<thead>
+		<tr>
+			<th>Project</th>
+			<th>Latest version(s)</th>
+			<th>Issues (latest)</th>
+			<th>Issues (overall)</th>
+		</tr>
+	</thead>
+	<tbody>
+	<tr class="">
+		<td><a href="/project/firefox">firefox</a></td>
+		<td></td>
+		<td>
+			<dl class="projects-table__issues-list">
+			</dl>
+		</td>
+		<td>
+			<dl class="projects-table__issues-list">
+			</dl>
+		</td>
+	</tr>
+	</tbody>
+</table>
 
 
 </div></main>

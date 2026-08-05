@@ -26,6 +26,11 @@ $nav-bg: light-dark($zinc-50, $slate-850);
 $code-fg: light-dark($zinc-750, $zinc-200);
 $code-bg: light-dark($slate-100, $slate-800);
 
+$line-fg: light-dark($slate-200, $slate-850);
+
+$input-bg: light-dark($white, $slate-850);
+$button-bg: light-dark($zinc-50, $slate-750);
+
 @mixin block {
 	box-shadow: 0 .1rem .2rem #0000001e, 0 .1rem .2rem #0000003c;
 }

@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 984
+content-length: 1183
 
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +33,11 @@ content-length: 984
 
 <h1>Projects</h1>
 
+
+<form action="/projects" method="GET" class="search-form">
+	<input type="text" name="search" placeholder="project name, e.g. &quot;firefox&quot;" value="">
+	<input type="submit" value="Go">
+</form>
 
 
 <p>No projects found</p>

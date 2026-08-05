@@ -3,20 +3,52 @@
 {% block header %}Projects{% endblock %}
 {% block content %}
 
+<form action="{{ my_route.url_for().cleared_params().build()? }}" method="GET" class="search-form">
+	<input type="text" name="search" placeholder="project name, e.g. &quot;firefox&quot;" value="{{ search_term }}">
+	<input type="submit" value="Go">
+</form>
+
 {% if projects.is_empty() %}
 <p>No projects found</p>
 {% else %}
-<ul class="list list--horizontal list--blocky">
+<p>{% if is_too_many_results %}More than {% endif %}{{ projects.len() }} project{{ projects.len() | pluralize }} found</p>
+<table class="projects-table">
+	<thead>
+		<tr>
+			<th>Project</th>
+			<th>Latest version(s)</th>
+			<th>Issues (latest)</th>
+			<th>Issues (overall)</th>
+		</tr>
+	</thead>
+	<tbody>
 	{%- for project in projects %}
-	<li class="list__item
-		{%- if project.max_snippet_counts.contains_key(&wiyci_common::models::snippets::SnippetKind::FailedTest) %} list__item--failure
-		{%- else if project.max_snippet_counts.contains_key(&wiyci_common::models::snippets::SnippetKind::CompilerWarning) %} list__item--warning
-		{%- endif -%}
-	">
-		<a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a>
-	</li>
+	{%- let num_warnings = project.latest_snippet_counts.get(&SnippetKind::CompilerWarning).copied().unwrap_or_default() %}
+	{%- let num_failed_tests = project.latest_snippet_counts.get(&SnippetKind::FailedTest).copied().unwrap_or_default() %}
+	{%- let fatal = num_failed_tests > 0 %}
+	{%- let warning = num_warnings > 0 %}
+	<tr class="{% if fatal %}projects-table__row--failure{% else if warning %}projects-table__row--warning{% endif %}">
+		<td><a href="{{ crate::routes::Route::Project.url_for().path_param("name", project.name)?.build()? }}">{{ project.name }}</a></td>
+		<td>{% for version in project.latest_versions %}{% if !loop.first %} {% endif %}<span class="version">{{ version }}</span>{% endfor %}</td>
+		<td>
+			<dl class="projects-table__issues-list">
+				{%- if num_warnings > 0 %}<dt>Warnings</dt><dd>{{ num_warnings }}</dt></dd>{% endif %}
+				{%- if num_failed_tests > 0 %}<dt>Failed tests</dt><dd>{{ num_failed_tests }}</dt></dd>{% endif %}
+			</dl>
+		</td>
+		<td>
+			{%- let num_warnings = project.max_snippet_counts.get(&SnippetKind::CompilerWarning).copied().unwrap_or_default() %}
+			{%- let num_failed_tests = project.max_snippet_counts.get(&SnippetKind::FailedTest).copied().unwrap_or_default() %}
+			<dl class="projects-table__issues-list">
+				{%- if num_warnings > 0 %}<dt>Warnings</dt><dd>{{ num_warnings }}</dt></dd>{% endif %}
+				{%- if num_failed_tests > 0 %}<dt>Failed tests</dt><dd>{{ num_failed_tests }}</dt></dd>{% endif %}
+			</dl>
+		</td>
+	</tr>
 	{%- endfor %}
-</ul>
-{% endif %}
+	</tbody>
+</table>
+{%- if is_too_many_results %}<p>More results were omitted, please narrow your search.</p>{% endif %}
+{%- endif %}
 
 {% endblock content %}
