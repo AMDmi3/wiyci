@@ -3,3 +3,4 @@
 
 //pub const PROJECTS_PER_PAGE: u64 = 50;
 pub const PROJECTS_PER_PAGE: u64 = 2500; // until pagination is implemented
+pub const RECENT_VERSIONS_PER_PAGE: u64 = 50;

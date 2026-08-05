@@ -35,4 +35,38 @@
 	#}
 </section>
 
+{%- if !recent_problematic_versions.is_empty() %}
+<section>
+	<h2>Recent problems</h2>
+	<table class="projects-table">
+		<thead>
+			<tr>
+				<th class="projects-table__date-column">Ago</th>
+				<th>Project</th>
+				<th>Version</th>
+				<th>Issues</th>
+			</tr>
+		</thead>
+		<tbody>
+		{%- for version in recent_problematic_versions %}
+		{%- let num_warnings = version.max_snippet_counts.get(&SnippetKind::CompilerWarning).copied().unwrap_or_default() %}
+		{%- let num_failed_tests = version.max_snippet_counts.get(&SnippetKind::FailedTest).copied().unwrap_or_default() %}
+		{%- let fatal = num_failed_tests > 0 %}
+		<tr class="{% if fatal %}projects-table__row--failure{% else %}projects-table__row--warning{% endif %}">
+			<td class="projects-table__date-column">{{ version.created_at.format_elapsed() }}</td>
+			<td><a href="{{ crate::routes::Route::Project.url_for().path_param("name", version.project_name)?.build()? }}">{{ version.project_name }}</a></td>
+			<td><span class="version">{{ version.version }}</span></td>
+			<td>
+				<dl class="projects-table__issues-list">
+					{%- if num_warnings > 0 %}<dt>Warnings</dt><dd>{{ num_warnings }}</dt></dd>{% endif %}
+					{%- if num_failed_tests > 0 %}<dt>Failed tests</dt><dd>{{ num_failed_tests }}</dt></dd>{% endif %}
+				</dl>
+			</td>
+		</tr>
+		{%- endfor %}
+		</tbody>
+	</table>
+</section>
+{%- endif %}
+
 {% endblock content %}

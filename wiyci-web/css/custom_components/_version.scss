@@ -1,0 +1,8 @@
+@use "../theme" as *;
+
+.version {
+	padding: .125rem .25rem;
+	border-radius: .25rem;
+	//border: 1px solid $line-fg;
+	background-color: #00000020;
+}

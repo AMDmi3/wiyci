@@ -11,6 +11,7 @@ mod result;
 mod routes;
 mod state;
 mod static_files;
+mod time;
 
 use std::sync::Arc;
 

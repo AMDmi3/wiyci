@@ -1,0 +1,1 @@
+DROP INDEX versions_recent_problematic_idx
