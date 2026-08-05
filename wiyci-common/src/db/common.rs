@@ -7,9 +7,15 @@ use sqlx::types::Json;
 
 use crate::models::snippets::SnippetKind;
 
-pub fn parse_snippet_counts(json: Json<HashMap<String, i64>>) -> HashMap<SnippetKind, u64> {
-    json.into_inner()
-        .into_iter()
-        .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v as u64)))
-        .collect()
+pub fn convert_snippet_counts(
+    input: Option<Json<HashMap<String, u64>>>,
+) -> HashMap<SnippetKind, u64> {
+    input
+        .map(|json| {
+            json.into_inner()
+                .into_iter()
+                .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
+                .collect()
+        })
+        .unwrap_or_default()
 }

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use indoc::indoc;
 use sqlx::{FromRow, Postgres, types::Json};
 
-use crate::db::common::parse_snippet_counts;
+use crate::db::common::convert_snippet_counts;
 use crate::models::statistics::{SnippetCountStatistics, Statistics, StatisticsDelta};
 
 pub async fn get(conn: impl sqlx::Acquire<'_, Database = Postgres>) -> sqlx::Result<Statistics> {
@@ -46,22 +46,16 @@ pub async fn apply_delta(
 #[derive(FromRow)]
 pub struct DbSnippetCountStatistics {
     pub num_projects: i64,
-    pub num_snippets: Option<Json<HashMap<String, i64>>>,
-    pub num_projects_by_snippet: Option<Json<HashMap<String, i64>>>,
+    pub num_snippets: Option<Json<HashMap<String, u64>>>,
+    pub num_projects_by_snippet: Option<Json<HashMap<String, u64>>>,
 }
 
 impl From<DbSnippetCountStatistics> for SnippetCountStatistics {
     fn from(db: DbSnippetCountStatistics) -> Self {
         Self {
             num_projects: db.num_projects as u64,
-            num_snippets: db
-                .num_snippets
-                .map(parse_snippet_counts)
-                .unwrap_or_default(),
-            num_projects_by_snippet: db
-                .num_projects_by_snippet
-                .map(parse_snippet_counts)
-                .unwrap_or_default(),
+            num_snippets: convert_snippet_counts(db.num_snippets),
+            num_projects_by_snippet: convert_snippet_counts(db.num_projects_by_snippet),
         }
     }
 }

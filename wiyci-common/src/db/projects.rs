@@ -8,8 +8,8 @@ use indoc::indoc;
 use sqlx::{FromRow, Postgres, types::Json};
 use time::OffsetDateTime;
 
+use crate::db::common::convert_snippet_counts;
 use crate::models::projects::Project;
-use crate::models::snippets::SnippetKind;
 
 pub async fn create(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
@@ -89,17 +89,6 @@ pub struct DbProject {
     pub max_snippet_counts: Option<Json<HashMap<String, u64>>>,
     pub latest_snippet_counts: Option<Json<HashMap<String, u64>>>,
     pub latest_versions: Option<Vec<String>>,
-}
-
-fn convert_snippet_counts(input: Option<Json<HashMap<String, u64>>>) -> HashMap<SnippetKind, u64> {
-    input
-        .map(|json| {
-            json.into_inner()
-                .into_iter()
-                .filter_map(|(k, v)| k.parse().ok().map(|k| (k, v)))
-                .collect()
-        })
-        .unwrap_or_default()
 }
 
 impl From<DbProject> for Project {
