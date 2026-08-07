@@ -17,6 +17,8 @@ use reqwest_middleware::ClientWithMiddleware as HttpClient;
 use std::pin::Pin;
 use tracing::info;
 
+use wiyci_common::models::fetch_tasks::FetchTaskKind;
+
 use crate::config::Config;
 use crate::init::{init_database, init_http_client, init_logging, init_metrics};
 
@@ -64,7 +66,24 @@ async fn main() -> anyhow::Result<()> {
         // just a random value - with unset bulk_update_min_spread worker will not ran
         config.bulk_update_min_spread.unwrap_or(100),
     );
-    let fetch = workers::FetchWorker::new(pool.clone(), client.clone(), storage.clone());
+    let fetch_alpine = workers::GenericFetchWorker::new(
+        pool.clone(),
+        client.clone(),
+        storage.clone(),
+        FetchTaskKind::Alpine,
+    );
+    let fetch_fedora = workers::GenericFetchWorker::new(
+        pool.clone(),
+        client.clone(),
+        storage.clone(),
+        FetchTaskKind::Fedora,
+    );
+    let fetch_freebsd = workers::GenericFetchWorker::new(
+        pool.clone(),
+        client.clone(),
+        storage.clone(),
+        FetchTaskKind::FreeBsd,
+    );
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
     let remove_logs = workers::RemoveLogsWorker::new(pool.clone(), storage.clone());
@@ -73,7 +92,9 @@ async fn main() -> anyhow::Result<()> {
     let mut futures: Vec<Pin<Box<dyn Future<Output = anyhow::Result<()>>>>> = vec![
         Box::pin(preseed.run()),
         Box::pin(singular_update.run()),
-        Box::pin(fetch.run()),
+        Box::pin(fetch_alpine.run()),
+        Box::pin(fetch_fedora.run()),
+        Box::pin(fetch_freebsd.run()),
         Box::pin(parse.run()),
         Box::pin(metrics.run()),
         Box::pin(remove_logs.run()),

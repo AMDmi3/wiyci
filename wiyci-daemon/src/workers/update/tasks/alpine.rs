@@ -3,7 +3,7 @@
 
 use anyhow::bail;
 
-use wiyci_common::models::fetch_tasks::NewFetchTask;
+use wiyci_common::models::fetch_tasks::{FetchTaskKind, NewFetchTask};
 use wiyci_common::models::repology::RepologyPackage;
 
 const ARCHES: &[&str] = &[
@@ -33,6 +33,7 @@ where
 
     for &arch in ARCHES {
         tasks.extend(std::iter::once(NewFetchTask {
+            kind: FetchTaskKind::Alpine,
             url: format!(
                 "https://build.alpinelinux.org/buildlogs/build-edge-{}/{}/{}/{}-{}.log",
                 arch, subrepo, srcname, srcname, version

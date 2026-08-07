@@ -6,7 +6,7 @@ use std::time::Duration;
 use indoc::indoc;
 use sqlx::Postgres;
 
-use crate::models::fetch_tasks::{FetchTask, NewFetchTask};
+use crate::models::fetch_tasks::{FetchTask, FetchTaskKind, NewFetchTask};
 
 pub async fn register_failure(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
@@ -60,16 +60,19 @@ pub async fn resolve(
 
 pub async fn get_next_for_fetch(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    kind: FetchTaskKind,
 ) -> sqlx::Result<Option<FetchTask>> {
     let mut tx = conn.begin().await?;
 
     let task = sqlx::query_as(indoc! {"
           SELECT *
             FROM fetch_tasks
-           WHERE next_fetch_attempt_at < now()
+           WHERE kind = $1
+             AND next_fetch_attempt_at < now()
         ORDER BY next_fetch_attempt_at, id
            LIMIT 1
     "})
+    .bind(kind)
     .fetch_optional(&mut *tx)
     .await?;
 
@@ -86,20 +89,23 @@ pub async fn update_tasks_for_project(
 
     for task in tasks {
         sqlx::query(indoc! {"
-            INSERT INTO fetch_tasks(project_name, url, version, variant, source_pkgname, binary_pkgname)
-                 VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO fetch_tasks(project_name, kind, url, version, variant, source_pkgname, binary_pkgname)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (project_name, url)
               DO UPDATE
-                    SET version = EXCLUDED.version
+                    SET kind = EXCLUDED.kind
+                      , version = EXCLUDED.version
                       , variant = EXCLUDED.variant
                       , source_pkgname = EXCLUDED.source_pkgname
                       , binary_pkgname = EXCLUDED.binary_pkgname
-                  WHERE fetch_tasks.version IS DISTINCT FROM EXCLUDED.version
+                  WHERE fetch_tasks.kind IS DISTINCT FROM EXCLUDED.kind
+                     OR fetch_tasks.version IS DISTINCT FROM EXCLUDED.version
                      OR fetch_tasks.variant IS DISTINCT FROM EXCLUDED.variant
                      OR fetch_tasks.source_pkgname IS DISTINCT FROM EXCLUDED.source_pkgname
                      OR fetch_tasks.binary_pkgname IS DISTINCT FROM EXCLUDED.binary_pkgname
         "})
         .bind(project_name)
+        .bind(task.kind)
         .bind(&task.url)
         .bind(&task.version)
         .bind(&task.variant)

@@ -14,7 +14,7 @@ use tokio_util::io::StreamReader;
 use tracing::{info, info_span, warn};
 
 use wiyci_common::db;
-use wiyci_common::models::fetch_tasks::FetchTask;
+use wiyci_common::models::fetch_tasks::{FetchTask, FetchTaskKind};
 use wiyci_common::models::logs::NewLog;
 use wiyci_common::models::statistics::StatisticsDelta;
 
@@ -44,10 +44,11 @@ fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     }
 }
 
-pub struct FetchWorker {
+pub struct GenericFetchWorker {
     pool: PgPool,
     client: HttpClient,
     storage: LogStorage,
+    kind: FetchTaskKind,
 }
 
 #[derive(Debug)]
@@ -77,12 +78,13 @@ enum FetchStatus {
     Reject(FetchReject),
 }
 
-impl FetchWorker {
-    pub fn new(pool: PgPool, client: HttpClient, storage: LogStorage) -> Self {
+impl GenericFetchWorker {
+    pub fn new(pool: PgPool, client: HttpClient, storage: LogStorage, kind: FetchTaskKind) -> Self {
         Self {
             pool,
             client,
             storage,
+            kind,
         }
     }
 
@@ -202,11 +204,11 @@ impl FetchWorker {
         Ok(())
     }
 
-    #[cfg_attr(not(coverage), tracing::instrument(name = "Fetch", skip_all))]
+    #[cfg_attr(not(coverage), tracing::instrument(name = "GenericFetch", skip_all, fields(kind = ?self.kind)))]
     pub async fn run(&self) -> anyhow::Result<()> {
         PollingWorkerRunner::new(
-            "Fetch",
-            async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool).await?),
+            "GenericFetch",
+            async || Ok(db::fetch_tasks::get_next_for_fetch(&self.pool, self.kind).await?),
             async |task| self.fetch_log(task).await,
         )
         .with_span(|task| {

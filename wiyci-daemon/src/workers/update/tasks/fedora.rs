@@ -3,7 +3,7 @@
 
 use anyhow::bail;
 
-use wiyci_common::models::fetch_tasks::NewFetchTask;
+use wiyci_common::models::fetch_tasks::{FetchTaskKind, NewFetchTask};
 use wiyci_common::models::repology::RepologyPackage;
 
 // XXX: Some logs (for instance, mingw-expat) can reside in noarch directory, should we add it?
@@ -33,6 +33,7 @@ where
         };
 
         tasks.extend(std::iter::once(NewFetchTask {
+            kind: FetchTaskKind::Fedora,
             url: format!(
                 "https://kojipkgs.fedoraproject.org/packages/{srcname}/{version}/{revision}/data/logs/{arch}/build.log",
             ),

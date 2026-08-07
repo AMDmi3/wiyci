@@ -3,7 +3,7 @@
 
 use anyhow::bail;
 
-use wiyci_common::models::fetch_tasks::NewFetchTask;
+use wiyci_common::models::fetch_tasks::{FetchTaskKind, NewFetchTask};
 use wiyci_common::models::repology::RepologyPackage;
 
 struct BuilderInfo {
@@ -34,6 +34,7 @@ where
 
     for builder in BUILDERS {
         tasks.extend(std::iter::once(NewFetchTask {
+            kind: FetchTaskKind::FreeBsd,
             url: builder
                 .url
                 .replace("{binname}", binname)

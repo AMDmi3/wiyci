@@ -4,8 +4,18 @@
 use sqlx::FromRow;
 use time::OffsetDateTime;
 
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "text")]
+#[non_exhaustive]
+pub enum FetchTaskKind {
+    Alpine,
+    Fedora,
+    FreeBsd,
+}
+
 #[derive(PartialEq, Eq, Hash)]
 pub struct NewFetchTask {
+    pub kind: FetchTaskKind,
     pub url: String,
     pub version: String,
     pub variant: String,
