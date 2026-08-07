@@ -58,7 +58,12 @@ async fn main() -> anyhow::Result<()> {
     // So instead hardcode the workers unconditionally, but allow to run them conditionally.
     let preseed = workers::PreseedWorker::new(pool.clone());
     let singular_update = workers::SingularUpdateWorker::new(pool.clone(), client.clone());
-    let bulk_update = workers::BulkUpdateWorker::new(pool.clone(), client.clone());
+    let bulk_update = workers::BulkUpdateWorker::new(
+        pool.clone(),
+        client.clone(),
+        // just a random value - with unset bulk_update_min_spread worker will not ran
+        config.bulk_update_min_spread.unwrap_or(100),
+    );
     let fetch = workers::FetchWorker::new(pool.clone(), client.clone(), storage.clone());
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
@@ -75,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
         Box::pin(expire_logs.run()),
     ];
 
-    if config.enable_bulk_update {
+    if config.bulk_update_min_spread.is_some() {
         futures.push(Box::pin(bulk_update.run()));
     }
 

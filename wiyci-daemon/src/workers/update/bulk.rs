@@ -19,22 +19,26 @@ use crate::workers::util::PollingWorkerRunner;
 
 const PERIOD: Duration = Duration::from_hours(8);
 const SINGULAR_UPDATE_FALLBACK_PERIOD: Duration = Duration::from_days(2); // depends on singular update period in fact
-const MIN_SPREAD: u32 = 31;
 
 pub struct BulkUpdateWorker {
     pool: PgPool,
     client: HttpClient,
+    min_spread: u32,
 }
 
 impl BulkUpdateWorker {
-    pub fn new(pool: PgPool, client: HttpClient) -> Self {
-        Self { pool, client }
+    pub fn new(pool: PgPool, client: HttpClient, min_spread: u32) -> Self {
+        Self {
+            pool,
+            client,
+            min_spread,
+        }
     }
 
     async fn iteration(&self, status: &BulkUpdateStatus) -> anyhow::Result<()> {
         let projects = api::repology::fetch_projects(
             &self.client,
-            MIN_SPREAD,
+            self.min_spread,
             status.last_project_name.as_deref(),
         )
         .await?;

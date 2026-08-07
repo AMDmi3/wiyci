@@ -75,12 +75,16 @@ pub struct CliArgs {
 
     /// Enable bulk project update from repology
     ///
+    /// Argument sets a lower bound on projects Spread value in Repology.
+    /// 50 gives you a few hundereds most popular projects, lower values
+    /// increase coverage to less popular projects.
+    ///
     /// Enabling this creates a significant load on Repology and sites hosting
     /// the logs, so it should only be enabled on production instance. When it's
     /// disabled, instance is still seeded with predefined set of lightweight
-    /// projects which should be enough to test it.
-    #[arg(long)]
-    enable_bulk_update: bool,
+    /// projects which should be enough for testing.
+    #[arg(long, value_name = "MIN SPREAD")]
+    bulk_update_min_spread: Option<u32>,
 }
 
 #[derive(Deserialize, Default)]
@@ -96,7 +100,7 @@ struct FileConfig {
     http_timeout: Option<f64>,
     http_delay: Option<f64>,
     storage_path: Option<PathBuf>,
-    enable_bulk_update: bool,
+    bulk_update_min_spread: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -110,7 +114,7 @@ pub struct Config {
     pub http_timeout: Duration,
     pub http_delay: Duration,
     pub storage_path: PathBuf,
-    pub enable_bulk_update: bool,
+    pub bulk_update_min_spread: Option<u32>,
 }
 
 impl Config {
@@ -156,7 +160,9 @@ impl Config {
             storage_path: args.storage_path.or(config.storage_path).ok_or_else(|| {
                 anyhow!("missing required argument or config parameter \"storage-path\"")
             })?,
-            enable_bulk_update: args.enable_bulk_update || config.enable_bulk_update,
+            bulk_update_min_spread: args
+                .bulk_update_min_spread
+                .or(config.bulk_update_min_spread),
         })
     }
 }
