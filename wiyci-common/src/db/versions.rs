@@ -109,7 +109,6 @@ pub async fn list_recent_problematic(
                  INNER JOIN projects
                  ON versions.project_name = projects.name
            WHERE version = ANY(latest_versions)
-             AND projects.created_at < now() - interval '1 week'
         ORDER BY created_at DESC
            LIMIT $1
     "})
