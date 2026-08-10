@@ -14,6 +14,7 @@ pub enum Section {
     Undefined,
     Root,
     Projects,
+    Recent,
     Docs,
 }
 
@@ -43,6 +44,8 @@ pub enum Route {
     Project,
     #[get("/projects", handler = handlers::projects, props = RouteProps::default().section(Section::Projects) )]
     Projects,
+    #[get("/recent", handler = handlers::recent, props = RouteProps::default().section(Section::Recent) )]
+    Recent,
     #[get("/snippets/{id}", handler = handlers::snippets, props = RouteProps::default().section(Section::Projects) )]
     Snippets,
     #[get("/about", handler = handlers::about, props = RouteProps::default().section(Section::Docs) )]

@@ -22,6 +22,7 @@
 		{%- endif -%}
 		{%- endmacro %}
 		{{- navbar_link("Projects", crate::routes::Route::Projects, crate::routes::Section::Projects) }}
+		{{- navbar_link("Recent", crate::routes::Route::Recent, crate::routes::Section::Recent) }}
 		{#- <!-- page is empty for now -->
 		{{ navbar_link("About", crate::routes::Route::About, crate::routes::Section::Docs) }}
 		#}
