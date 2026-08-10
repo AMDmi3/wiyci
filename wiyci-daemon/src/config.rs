@@ -73,18 +73,22 @@ pub struct CliArgs {
     #[arg(long)]
     storage_path: Option<PathBuf>,
 
-    /// Enable bulk project update from repology
+    /// Lower spread limit on projects to update from Repology
     ///
-    /// Argument sets a lower bound on projects Spread value in Repology.
-    /// 50 gives you a few hundereds most popular projects, lower values
-    /// increase coverage to less popular projects.
+    /// Required to be specified for bulk update to run.
     ///
-    /// Enabling this creates a significant load on Repology and sites hosting
-    /// the logs, so it should only be enabled on production instance. When it's
-    /// disabled, instance is still seeded with predefined set of lightweight
-    /// projects which should be enough for testing.
-    #[arg(long, value_name = "MIN SPREAD")]
+    /// Enabling bulk update creates a significant load on Repology and
+    /// sites hosting the logs, so it should only be enabled on production
+    /// instance. When it's disabled, instance is still seeded with predefined
+    /// set of lightweight projects which should be enough for testing.
+    #[arg(long, value_name = "MIN SPREAD", help_heading = "Bulk update")]
     bulk_update_min_spread: Option<u32>,
+
+    /// Period in seconds for bulk projects update from Repology
+    ///
+    /// Required to be specified for bulk update to run.
+    #[arg(long, value_name = "SECONDS", help_heading = "Bulk update")]
+    bulk_update_period: Option<u64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -101,6 +105,7 @@ struct FileConfig {
     http_delay: Option<f64>,
     storage_path: Option<PathBuf>,
     bulk_update_min_spread: Option<u32>,
+    bulk_update_period: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -115,6 +120,7 @@ pub struct Config {
     pub http_delay: Duration,
     pub storage_path: PathBuf,
     pub bulk_update_min_spread: Option<u32>,
+    pub bulk_update_period: Option<Duration>,
 }
 
 impl Config {
@@ -163,6 +169,10 @@ impl Config {
             bulk_update_min_spread: args
                 .bulk_update_min_spread
                 .or(config.bulk_update_min_spread),
+            bulk_update_period: args
+                .bulk_update_period
+                .or(config.bulk_update_period)
+                .map(Duration::from_secs),
         })
     }
 }

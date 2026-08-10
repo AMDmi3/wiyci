@@ -12,6 +12,8 @@ mod storage;
 mod util;
 mod workers;
 
+use std::time::Duration;
+
 use anyhow::Context as _;
 use reqwest_middleware::ClientWithMiddleware as HttpClient;
 use std::pin::Pin;
@@ -63,8 +65,11 @@ async fn main() -> anyhow::Result<()> {
     let bulk_update = workers::BulkUpdateWorker::new(
         pool.clone(),
         client.clone(),
-        // just a random value - with unset bulk_update_min_spread worker will not ran
+        // just a random values - with unset bulk_update_* the worker will not ran
         config.bulk_update_min_spread.unwrap_or(100),
+        config
+            .bulk_update_period
+            .unwrap_or(Duration::from_secs(86400)),
     );
     let fetch_alpine = workers::GenericFetchWorker::new(
         pool.clone(),
@@ -101,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
         Box::pin(expire_logs.run()),
     ];
 
-    if config.bulk_update_min_spread.is_some() {
+    if config.bulk_update_min_spread.is_some() && config.bulk_update_period.is_some() {
         futures.push(Box::pin(bulk_update.run()));
     }
 

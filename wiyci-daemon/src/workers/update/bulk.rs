@@ -17,21 +17,22 @@ use crate::workers::update::common::get_latest_versions;
 use crate::workers::update::tasks::generate_tasks;
 use crate::workers::util::PollingWorkerRunner;
 
-const PERIOD: Duration = Duration::from_hours(8);
 const SINGULAR_UPDATE_FALLBACK_PERIOD: Duration = Duration::from_days(2); // depends on singular update period in fact
 
 pub struct BulkUpdateWorker {
     pool: PgPool,
     client: HttpClient,
     min_spread: u32,
+    period: Duration,
 }
 
 impl BulkUpdateWorker {
-    pub fn new(pool: PgPool, client: HttpClient, min_spread: u32) -> Self {
+    pub fn new(pool: PgPool, client: HttpClient, min_spread: u32, period: Duration) -> Self {
         Self {
             pool,
             client,
             min_spread,
+            period,
         }
     }
 
@@ -47,7 +48,7 @@ impl BulkUpdateWorker {
 
         let Some(last_project_name) = projects.keys().max() else {
             info!("update finished");
-            db::bulk_update::finish_update(&self.pool, PERIOD).await?;
+            db::bulk_update::finish_update(&self.pool, self.period).await?;
             return Ok(());
         };
 
