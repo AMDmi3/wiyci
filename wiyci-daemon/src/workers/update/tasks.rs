@@ -4,6 +4,7 @@
 mod alpine;
 mod fedora;
 mod freebsd;
+mod nix;
 
 use std::collections::{BTreeSet, HashMap};
 
@@ -124,6 +125,7 @@ pub fn generate_tasks(packages: &[RepologyPackage]) -> Vec<NewFetchTask> {
                 "alpine_edge" => alpine::generate_tasks(package, &mut tasks),
                 "fedora_rawhide" => fedora::generate_tasks(package, &mut tasks),
                 "freebsd" => freebsd::generate_tasks(package, &mut tasks),
+                "nix_unstable" => nix::generate_tasks(package, &mut tasks),
                 _ => continue,
             };
 

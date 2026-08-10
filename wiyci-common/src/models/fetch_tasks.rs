@@ -11,6 +11,7 @@ pub enum FetchTaskKind {
     Alpine,
     Fedora,
     FreeBsd,
+    Nix,
 }
 
 #[derive(PartialEq, Eq, Hash)]

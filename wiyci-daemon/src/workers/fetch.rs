@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 mod generic;
+mod nix;
 
 use std::time::Duration;
 
@@ -26,6 +27,7 @@ use crate::util::duration::DurationExt as _;
 use crate::workers::util::PollingWorkerRunner;
 
 pub use generic::*;
+pub use nix::*;
 
 const MAX_ATTEMPTS: u32 = 7;
 const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
@@ -54,6 +56,7 @@ pub enum FetchReject {
     StoreFailed(std::io::Error),
     BadHttpCode(StatusCode),
     BadContentType(String),
+    ParseError(String),
     ZeroSize,
 }
 
@@ -65,6 +68,7 @@ impl std::fmt::Display for FetchReject {
             Self::StoreFailed(error) => write!(f, "{error}"),
             Self::BadHttpCode(code) => write!(f, "bad HTTP code {}", code.as_u16()),
             Self::BadContentType(content_type) => write!(f, "bad MIME type {content_type}"),
+            Self::ParseError(error) => write!(f, "failed to parse: {error}"),
             Self::ZeroSize => write!(f, "zero size response"),
         }
     }

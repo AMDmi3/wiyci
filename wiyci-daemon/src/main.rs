@@ -92,6 +92,13 @@ async fn main() -> anyhow::Result<()> {
         FetchTaskKind::FreeBsd,
         workers::fetch::GenericFetchImpl,
     );
+    let fetch_nix = workers::GenericFetchWorker::new(
+        pool.clone(),
+        client.clone(),
+        storage.clone(),
+        FetchTaskKind::Nix,
+        workers::fetch::NixFetchImpl,
+    );
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
     let remove_logs = workers::RemoveLogsWorker::new(pool.clone(), storage.clone());
@@ -103,6 +110,7 @@ async fn main() -> anyhow::Result<()> {
         Box::pin(fetch_alpine.run()),
         Box::pin(fetch_fedora.run()),
         Box::pin(fetch_freebsd.run()),
+        Box::pin(fetch_nix.run()),
         Box::pin(parse.run()),
         Box::pin(metrics.run()),
         Box::pin(remove_logs.run()),
