@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 mod expire_logs;
-mod fetch;
+pub mod fetch;
 mod metrics;
 mod parse;
 mod preseed;

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+mod generic;
+
 use std::time::Duration;
 
 use futures_util::StreamExt;
@@ -23,6 +25,8 @@ use crate::storage::LogStorage;
 use crate::util::duration::DurationExt as _;
 use crate::workers::util::PollingWorkerRunner;
 
+pub use generic::*;
+
 const MAX_ATTEMPTS: u32 = 7;
 const MAX_CONTENT_SIZE: u64 = 10 * 1024 * 1024;
 
@@ -44,15 +48,8 @@ fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     }
 }
 
-pub struct GenericFetchWorker {
-    pool: PgPool,
-    client: HttpClient,
-    storage: LogStorage,
-    kind: FetchTaskKind,
-}
-
 #[derive(Debug)]
-enum FetchReject {
+pub enum FetchReject {
     RequestFailed(reqwest_middleware::Error),
     StoreFailed(std::io::Error),
     BadHttpCode(StatusCode),
@@ -78,20 +75,46 @@ enum FetchStatus {
     Reject(FetchReject),
 }
 
-impl GenericFetchWorker {
-    pub fn new(pool: PgPool, client: HttpClient, storage: LogStorage, kind: FetchTaskKind) -> Self {
+pub trait FetchImpl {
+    async fn fetch(
+        &self,
+        client: &HttpClient,
+        fetch_task: &FetchTask,
+    ) -> Result<reqwest::Response, FetchReject>;
+}
+
+pub struct GenericFetchWorker<I> {
+    pool: PgPool,
+    client: HttpClient,
+    storage: LogStorage,
+    kind: FetchTaskKind,
+    fetch_impl: I,
+}
+
+impl<I> GenericFetchWorker<I>
+where
+    I: FetchImpl,
+{
+    pub fn new(
+        pool: PgPool,
+        client: HttpClient,
+        storage: LogStorage,
+        kind: FetchTaskKind,
+        fetch_impl: I,
+    ) -> Self {
         Self {
             pool,
             client,
             storage,
             kind,
+            fetch_impl,
         }
     }
 
     async fn fetch_and_store_log(&self, fetch_task: &FetchTask) -> anyhow::Result<FetchStatus> {
-        let response = match self.client.get(&fetch_task.url).send().await {
+        let response = match self.fetch_impl.fetch(&self.client, fetch_task).await {
             Ok(response) => response,
-            Err(error) => return Ok(FetchStatus::Reject(FetchReject::RequestFailed(error))),
+            Err(reject) => return Ok(FetchStatus::Reject(reject)),
         };
 
         if response.status() != StatusCode::OK {

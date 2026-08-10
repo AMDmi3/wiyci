@@ -76,18 +76,21 @@ async fn main() -> anyhow::Result<()> {
         client.clone(),
         storage.clone(),
         FetchTaskKind::Alpine,
+        workers::fetch::GenericFetchImpl,
     );
     let fetch_fedora = workers::GenericFetchWorker::new(
         pool.clone(),
         client.clone(),
         storage.clone(),
         FetchTaskKind::Fedora,
+        workers::fetch::GenericFetchImpl,
     );
     let fetch_freebsd = workers::GenericFetchWorker::new(
         pool.clone(),
         client.clone(),
         storage.clone(),
         FetchTaskKind::FreeBsd,
+        workers::fetch::GenericFetchImpl,
     );
     let parse = workers::ParseWorker::new(pool.clone(), storage.clone());
     let metrics = workers::MetricsWorker::new(pool.clone());
