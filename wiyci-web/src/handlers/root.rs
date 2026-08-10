@@ -25,11 +25,20 @@ struct TemplateParams<'a> {
 
 #[cfg_attr(not(coverage), tracing::instrument(skip_all))]
 pub async fn root(my_route: MyRoute, State(state): State<Arc<AppState>>) -> HandlerResult {
-    let recent_problematic_versions = db::versions::list_recent_problematic(
+    let mut recent_problematic_versions = db::versions::list_recent_problematic_for_known_projects(
         &state.pool,
         crate::constants::RECENT_VERSIONS_PER_PAGE,
     )
     .await?;
+
+    if recent_problematic_versions.len() < (crate::constants::RECENT_VERSIONS_PER_PAGE / 2) as usize
+    {
+        recent_problematic_versions = db::versions::list_recent_problematic_for_any_projects(
+            &state.pool,
+            crate::constants::RECENT_VERSIONS_PER_PAGE,
+        )
+        .await?;
+    }
 
     Ok(Html(
         TemplateParams {

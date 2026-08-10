@@ -87,7 +87,7 @@ impl From<DbVersion> for Version {
     }
 }
 
-pub async fn list_recent_problematic(
+pub async fn list_recent_problematic_for_any_projects(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
     limit: u64,
 ) -> sqlx::Result<Vec<Version>> {
@@ -109,6 +109,40 @@ pub async fn list_recent_problematic(
                  INNER JOIN projects
                  ON versions.project_name = projects.name
            WHERE version = ANY(latest_versions)
+        ORDER BY created_at DESC
+           LIMIT $1
+    "})
+    .bind(limit as i64)
+    .fetch_all(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(versions.into_iter().map(|version| version.into()).collect())
+}
+
+pub async fn list_recent_problematic_for_known_projects(
+    conn: impl sqlx::Acquire<'_, Database = Postgres>,
+    limit: u64,
+) -> sqlx::Result<Vec<Version>> {
+    let mut tx = conn.begin().await?;
+
+    // NOTE: don't forget to sync condition to versions_recent_problematic_idx index
+    let versions: Vec<DbVersion> = sqlx::query_as(indoc! {"
+    WITH
+        candidates AS (
+              SELECT *
+                FROM versions
+               WHERE (versions.max_snippet_counts->>'CompilerWarning')::integer > 0
+                  OR (versions.max_snippet_counts->>'FailedTest')::integer > 0
+            ORDER BY created_at DESC
+               LIMIT $1 * 2
+        )
+          SELECT versions.*
+            FROM candidates AS versions
+                 INNER JOIN projects
+                 ON versions.project_name = projects.name
+           WHERE version = ANY(latest_versions)
+             AND projects.created_at < now() - interval '1 week'
         ORDER BY created_at DESC
            LIMIT $1
     "})
