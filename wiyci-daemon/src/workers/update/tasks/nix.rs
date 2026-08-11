@@ -6,7 +6,7 @@ use anyhow::bail;
 use wiyci_common::models::fetch_tasks::{FetchTaskKind, FetchTaskParams, NewFetchTask};
 use wiyci_common::models::repology::RepologyPackage;
 
-const SYSTEMS: &[&str] = &["x86_64-linux", "aarch64-linux"];
+const SYSTEMS: &[&str] = &["x86_64-linux", "aarch64-linux", "aarch64-darwin"];
 
 pub fn generate_tasks<C>(package: &RepologyPackage, tasks: &mut C) -> anyhow::Result<()>
 where
