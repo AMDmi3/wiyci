@@ -145,6 +145,7 @@ where
         let etag = get_header("etag").map(|s| s.to_owned());
         let last_modified =
             get_header("last-modified").and_then(|s| OffsetDateTime::parse(s, &Rfc2822).ok());
+        let url = response.url().as_str().to_owned();
 
         let stream = response.bytes_stream();
         let reader = StreamReader::new(stream.map(|r| r.map_err(std::io::Error::other)));
@@ -173,6 +174,7 @@ where
         Ok(FetchStatus::Success(NewLog {
             id: fetch_task.id,
             fetch_task_id: fetch_task.id,
+            url,
             size,
             last_modified,
             etag,

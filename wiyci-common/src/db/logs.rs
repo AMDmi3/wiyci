@@ -17,12 +17,13 @@ pub async fn create(
 
     sqlx::query(indoc! {"
         INSERT INTO logs(id, fetch_task_id, url, project_name, version, variant, source_pkgname, binary_pkgname, size, last_modified, etag, is_truncated)
-             SELECT $1, $2, url, project_name, version, variant, source_pkgname, binary_pkgname, $3, $4, $5, $6
+             SELECT $1, $2, $3, project_name, version, variant, source_pkgname, binary_pkgname, $4, $5, $6, $7
                FROM fetch_tasks
               WHERE id = $2
     "})
     .bind(log.id)
     .bind(log.fetch_task_id)
+    .bind(&log.url)
     .bind(log.size as i32)
     .bind(log.last_modified)
     .bind(&log.etag)

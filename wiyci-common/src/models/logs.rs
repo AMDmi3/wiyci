@@ -11,6 +11,8 @@ pub struct NewLog {
     pub id: i32,
     pub fetch_task_id: i32,
 
+    pub url: String,
+
     pub size: u64,
     pub last_modified: Option<OffsetDateTime>,
     pub etag: Option<String>,
