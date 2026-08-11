@@ -4,16 +4,26 @@
 use dom_query::Document;
 use http::StatusCode;
 
-use wiyci_common::models::fetch_tasks::FetchTask;
+use wiyci_common::models::fetch_tasks::{FetchTask, FetchTaskParams};
 
 use crate::HttpClient;
 use crate::workers::fetch::{FetchImpl, FetchReject};
 
 pub struct NixFetchImpl;
 
-async fn fetch_job(client: &HttpClient, url: &str) -> Result<String, FetchReject> {
+async fn fetch_job(client: &HttpClient, params: &FetchTaskParams) -> Result<String, FetchReject> {
+    let expected_package_name = if let Some(pname) = &params.pkgname
+        && let Some(version) = &params.version
+    {
+        format!("{}-{}", pname, version)
+    } else {
+        return Err(FetchReject::Internal(
+            "incomplete fetch params for the fetch impl".into(),
+        ));
+    };
+
     let response = client
-        .get(url)
+        .get(&params.url)
         .send()
         .await
         .map_err(FetchReject::RequestFailed)?;
@@ -36,14 +46,12 @@ async fn fetch_job(client: &HttpClient, url: &str) -> Result<String, FetchReject
         {
             continue;
         }
-        let _pkgname = row.select("td:nth-child(4)").text().to_string(); // TODO: match with real package url
+        if row.select("td:nth-child(4)").text().as_ref() != expected_package_name {
+            continue;
+        }
 
-        if let Some(url) = row
-            .select("td:nth-child(2) > a")
-            .attr("href")
-            .map(|v| v.to_string())
-        {
-            return Ok(url);
+        if let Some(url) = row.select("td:nth-child(2) > a").attr("href").as_ref() {
+            return Ok(url.into());
         }
     }
 
@@ -83,7 +91,7 @@ impl FetchImpl for NixFetchImpl {
         client: &HttpClient,
         fetch_task: &FetchTask,
     ) -> Result<reqwest::Response, FetchReject> {
-        let build_url = fetch_job(client, &fetch_task.url).await?;
+        let build_url = fetch_job(client, &fetch_task.params).await?;
         let log_url = fetch_build(client, &build_url).await?;
 
         match client.get(&log_url).send().await {

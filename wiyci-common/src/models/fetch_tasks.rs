@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use time::OffsetDateTime;
 
@@ -14,10 +15,22 @@ pub enum FetchTaskKind {
     Nix,
 }
 
+// Note: make sure to add skip_serializing_if for any new optional
+// fields, so serialized params for existing tasks do not change,
+// otherwise ALL logs will have to be refetched
+#[derive(Debug, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
+pub struct FetchTaskParams {
+    pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pkgname: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
 #[derive(PartialEq, Eq, Hash)]
 pub struct NewFetchTask {
     pub kind: FetchTaskKind,
-    pub url: String,
+    pub params: FetchTaskParams,
     pub version: String,
     pub variant: String,
     pub source_pkgname: Option<String>,
@@ -29,7 +42,8 @@ pub struct FetchTask {
     pub id: i32,
     pub created_at: OffsetDateTime,
 
-    pub url: String,
+    #[sqlx(json)]
+    pub params: FetchTaskParams,
     pub project_name: String,
     pub version: String,
     pub variant: String,

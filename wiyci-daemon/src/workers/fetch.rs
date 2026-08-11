@@ -57,6 +57,7 @@ pub enum FetchReject {
     BadHttpCode(StatusCode),
     BadContentType(String),
     ParseError(String),
+    Internal(String),
     ZeroSize,
 }
 
@@ -69,6 +70,7 @@ impl std::fmt::Display for FetchReject {
             Self::BadHttpCode(code) => write!(f, "bad HTTP code {}", code.as_u16()),
             Self::BadContentType(content_type) => write!(f, "bad MIME type {content_type}"),
             Self::ParseError(error) => write!(f, "failed to parse: {error}"),
+            Self::Internal(error) => write!(f, "internal error: {error}"),
             Self::ZeroSize => write!(f, "zero size response"),
         }
     }
@@ -245,7 +247,7 @@ where
                 "task",
                 id = task.id,
                 project_name = task.project_name,
-                url = task.url
+                url = task.params.url
             )
         })
         .run()

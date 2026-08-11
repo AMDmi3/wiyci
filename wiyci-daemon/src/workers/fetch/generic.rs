@@ -14,7 +14,7 @@ impl FetchImpl for GenericFetchImpl {
         client: &HttpClient,
         fetch_task: &FetchTask,
     ) -> Result<reqwest::Response, FetchReject> {
-        match client.get(&fetch_task.url).send().await {
+        match client.get(&fetch_task.params.url).send().await {
             Ok(response) => Ok(response),
             Err(error) => Err(FetchReject::RequestFailed(error)),
         }

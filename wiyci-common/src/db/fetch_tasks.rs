@@ -4,9 +4,9 @@
 use std::time::Duration;
 
 use indoc::indoc;
-use sqlx::Postgres;
+use sqlx::{Postgres, types::Json};
 
-use crate::models::fetch_tasks::{FetchTask, FetchTaskKind, NewFetchTask};
+use crate::models::fetch_tasks::{FetchTask, FetchTaskKind, FetchTaskParams, NewFetchTask};
 
 pub async fn register_failure(
     conn: impl sqlx::Acquire<'_, Database = Postgres>,
@@ -89,9 +89,9 @@ pub async fn update_tasks_for_project(
 
     for task in tasks {
         sqlx::query(indoc! {"
-            INSERT INTO fetch_tasks(project_name, kind, url, version, variant, source_pkgname, binary_pkgname)
+            INSERT INTO fetch_tasks(project_name, kind, params, version, variant, source_pkgname, binary_pkgname)
                  VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (project_name, url)
+            ON CONFLICT (project_name, params)
               DO UPDATE
                     SET kind = EXCLUDED.kind
                       , version = EXCLUDED.version
@@ -106,7 +106,7 @@ pub async fn update_tasks_for_project(
         "})
         .bind(project_name)
         .bind(task.kind)
-        .bind(&task.url)
+        .bind(Json(&task.params))
         .bind(&task.version)
         .bind(&task.variant)
         .bind(&task.source_pkgname)
@@ -115,15 +115,16 @@ pub async fn update_tasks_for_project(
         .await?;
     }
 
-    let actual_urls: Vec<&str> = tasks.iter().map(|task| task.url.as_ref()).collect();
+    let actual_params: Vec<Json<&FetchTaskParams>> =
+        tasks.iter().map(|task| Json(&task.params)).collect();
 
     sqlx::query(indoc! {"
         DELETE FROM fetch_tasks
          WHERE project_name = $1
-           AND url != ALL($2)
+           AND params != ALL($2)
     "})
     .bind(project_name)
-    .bind(&actual_urls)
+    .bind(&actual_params)
     .execute(&mut *tx)
     .await?;
 
