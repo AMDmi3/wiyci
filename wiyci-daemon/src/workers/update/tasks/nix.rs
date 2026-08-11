@@ -15,6 +15,9 @@ where
     let Some(srcname) = &package.srcname else {
         bail!("no srcname");
     };
+    let Some(visiblename) = &package.visiblename else {
+        bail!("no visiblename");
+    };
 
     let version = package.origversion.as_ref().unwrap_or(&package.version);
 
@@ -26,8 +29,8 @@ where
                     "https://hydra.nixos.org/job/nixpkgs/unstable/{}.{}",
                     srcname, system
                 ),
-                version: Some(version.into()),
-                pkgname: package.srcname.clone(),
+                version: Some(version.to_string()),
+                pkgname: Some(visiblename.to_string()),
             },
             variant: format!("Nix {}", system),
             version: package.version.clone(),

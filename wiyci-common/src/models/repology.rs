@@ -11,6 +11,7 @@ pub struct RepologyPackage {
     pub binname: Option<String>,
     #[serde(default)]
     pub binnames: Vec<String>,
+    pub visiblename: Option<String>,
     pub version: String,
     pub origversion: Option<String>,
     pub status: String,
