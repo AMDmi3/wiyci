@@ -101,7 +101,7 @@ pub async fn get_next_for_parsing(
           SELECT *
             FROM logs
            WHERE parser_version IS NULL OR parser_version < $1
-        ORDER BY parser_version, id
+        ORDER BY parser_version NULLS FIRST, id
            LIMIT 1
     "#})
     .bind(current_parser_version as i32)
