@@ -17,7 +17,7 @@ use crate::storage::LogStorage;
 use crate::workers::util::PollingWorkerRunner;
 
 // Bump this on each parsing logic change to reparse stored logs
-const VERSION: u32 = LogParser::VERSION + 2;
+const VERSION: u32 = LogParser::VERSION + 3;
 
 const MAX_PARSED_LINE_LENGTH: Option<usize> = Some(10240);
 const MAX_PARSED_SNIPPETS_PER_KIND: Option<u64> = Some(1000);
