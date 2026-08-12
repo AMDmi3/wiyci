@@ -1,0 +1,3 @@
+ALTER TABLE snippets DROP COLUMN text_id;
+ALTER TABLE snippets ALTER COLUMN text SET NOT NULL;
+DROP TABLE texts;

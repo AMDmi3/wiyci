@@ -11,10 +11,12 @@ workspace = true
 indoc = "2.0.7"
 reqwest-middleware = { version = "0.5.2", features = ["json"] }
 serde = { version = "1.0.228", features = ["derive"] }
-sqlx = { version = "0.9.0", default-features = false, features = ["macros", "migrate", "postgres", "time"] }
+sqlx = { version = "0.9.0", default-features = false, features = ["macros", "migrate", "postgres", "time", "uuid"] }
 strum = { version = "0.28.0", features = ["derive"] }
 time = "0.3.53"
+uuid = "1.24.0"
 wiyci-parser = { path = "../wiyci-parser" }
+xxhash-rust = { version = "0.8.18", features = ["xxh3"] }
 
 [dev-dependencies]
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio"] }

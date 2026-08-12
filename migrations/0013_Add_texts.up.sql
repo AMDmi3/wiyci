@@ -1,0 +1,7 @@
+CREATE TABLE texts (
+    id UUID NOT NULL PRIMARY KEY,
+    text TEXT NOT NULL
+);
+
+ALTER TABLE snippets ADD COLUMN text_id UUID;
+ALTER TABLE snippets ALTER COLUMN text DROP NOT NULL;

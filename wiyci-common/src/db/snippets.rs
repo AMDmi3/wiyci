@@ -3,6 +3,8 @@
 
 use indoc::indoc;
 use sqlx::{FromRow, Postgres};
+use uuid::Uuid;
+use xxhash_rust::xxh3::xxh3_128;
 
 use crate::models::snippets::{NewSnippet, Snippet};
 
@@ -23,11 +25,19 @@ pub async fn replace_for_log(
 
     for snippet in snippets {
         sqlx::query(indoc! {"
-            INSERT INTO snippets(log_id, kind, text)
+            WITH
+                text AS (
+                    INSERT INTO texts (id, text)
+                         VALUES ($3, $4)
+                    ON CONFLICT (id)
+                     DO NOTHING
+                )
+            INSERT INTO snippets(log_id, kind, text_id)
                  VALUES ($1, $2, $3)
         "})
         .bind(log_id)
         .bind(snippet.kind)
+        .bind(Uuid::from_u128(xxh3_128(snippet.text.as_bytes())))
         .bind(&snippet.text)
         .execute(&mut *tx)
         .await?;
@@ -65,8 +75,13 @@ pub async fn list_for_log(
     let mut tx = conn.begin().await?;
 
     let snippets: Vec<DbSnippet> = sqlx::query_as(indoc! {"
-        SELECT *
+        SELECT snippets.id AS id
+             , log_id
+             , kind
+             , COALESCE(snippets.text, texts.text) AS text
           FROM snippets
+               LEFT JOIN texts
+               ON texts.id = snippets.text_id
          WHERE log_id = $1
     "})
     .bind(log_id)
