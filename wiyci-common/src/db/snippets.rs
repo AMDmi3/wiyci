@@ -24,23 +24,85 @@ pub async fn replace_for_log(
     .await?;
 
     for snippet in snippets {
-        sqlx::query(indoc! {"
-            WITH
-                text AS (
-                    INSERT INTO texts (id, text)
-                         VALUES ($3, $4)
-                    ON CONFLICT (id)
-                     DO NOTHING
-                )
-            INSERT INTO snippets(log_id, kind, text_id)
-                 VALUES ($1, $2, $3)
-        "})
-        .bind(log_id)
-        .bind(snippet.kind)
-        .bind(Uuid::from_u128(xxh3_128(snippet.text.as_bytes())))
-        .bind(&snippet.text)
-        .execute(&mut *tx)
-        .await?;
+        if let Some(warning_type) = &snippet.warning_type
+            && let Some(warning_message) = &snippet.warning_message
+        {
+            sqlx::query(indoc! {"
+                WITH
+                    text AS (
+                        INSERT INTO texts (id, text)
+                             VALUES ($3, $4)
+                        ON CONFLICT (id)
+                         DO NOTHING
+                    )
+                  , warning_type_inserted AS (
+                        INSERT INTO warning_types(text)
+                             VALUES ($5)
+                        ON CONFLICT (text)
+                         DO NOTHING
+                          RETURNING id
+                    )
+                  , warning_type_id AS (
+                        SELECT id
+                          FROM warning_type_inserted
+
+                         UNION ALL
+
+                        SELECT id
+                          FROM warning_types
+                         WHERE text = $5
+
+                         LIMIT 1
+                    )
+                  , warning_message_inserted AS (
+                        INSERT INTO warning_messages(text)
+                             VALUES ($6)
+                        ON CONFLICT (text)
+                         DO NOTHING
+                          RETURNING id
+                    )
+                  , warning_message_id AS (
+                        SELECT id
+                          FROM warning_message_inserted
+
+                         UNION ALL
+
+                        SELECT id
+                          FROM warning_messages
+                         WHERE text = $6
+
+                         LIMIT 1
+                    )
+                INSERT INTO snippets(log_id, kind, text_id, warning_type_id, warning_message_id)
+                     VALUES ($1, $2, $3, (SELECT id FROM warning_type_id), (SELECT id FROM warning_message_id))
+            "})
+            .bind(log_id)
+            .bind(snippet.kind)
+            .bind(Uuid::from_u128(xxh3_128(snippet.text.as_bytes())))
+            .bind(&snippet.text)
+            .bind(warning_type)
+            .bind(warning_message)
+            .execute(&mut *tx)
+            .await?;
+        } else {
+            sqlx::query(indoc! {"
+                WITH
+                    text AS (
+                        INSERT INTO texts (id, text)
+                             VALUES ($3, $4)
+                        ON CONFLICT (id)
+                         DO NOTHING
+                    )
+                INSERT INTO snippets(log_id, kind, text_id)
+                     VALUES ($1, $2, $3)
+            "})
+            .bind(log_id)
+            .bind(snippet.kind)
+            .bind(Uuid::from_u128(xxh3_128(snippet.text.as_bytes())))
+            .bind(&snippet.text)
+            .execute(&mut *tx)
+            .await?;
+        }
     }
 
     tx.commit().await?;

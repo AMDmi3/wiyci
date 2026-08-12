@@ -29,6 +29,8 @@ pub enum SnippetKind {
 pub struct NewSnippet {
     pub kind: SnippetKind,
     pub text: String,
+    pub warning_type: Option<String>,
+    pub warning_message: Option<String>,
 }
 
 pub struct Snippet {

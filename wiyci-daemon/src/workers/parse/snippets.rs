@@ -48,12 +48,16 @@ impl SnippetProcessor {
             Snippet::CompilerWarning(snippet) => NewSnippet {
                 kind: SnippetKind::CompilerWarning,
                 text: snippet.lines.join("\n"),
+                warning_type: snippet.category,
+                warning_message: Some(snippet.message),
             }
             .into(),
             Snippet::TestResult(snippet) => match snippet.outcome {
                 TestOutcome::Failed => NewSnippet {
                     kind: SnippetKind::FailedTest,
                     text: snippet.lines.join("\n"),
+                    warning_type: None,
+                    warning_message: None,
                 }
                 .into(),
                 TestOutcome::Skipped => SnippetKind::SkippedTest.into(),
