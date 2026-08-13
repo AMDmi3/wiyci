@@ -12,10 +12,8 @@ use crate::workers::fetch::{FetchImpl, FetchReject};
 pub struct NixFetchImpl;
 
 async fn fetch_job(client: &HttpClient, params: &FetchTaskParams) -> Result<String, FetchReject> {
-    let expected_package_name = if let Some(pname) = &params.pkgname
-        && let Some(version) = &params.version
-    {
-        format!("{}-{}", pname, version)
+    let expected_version_suffix = if let Some(version) = &params.version {
+        format!("-{}", version)
     } else {
         return Err(FetchReject::Internal(
             "incomplete fetch params for the fetch impl".into(),
@@ -46,7 +44,12 @@ async fn fetch_job(client: &HttpClient, params: &FetchTaskParams) -> Result<Stri
         {
             continue;
         }
-        if row.select("td:nth-child(4)").text().as_ref() != expected_package_name {
+        if !row
+            .select("td:nth-child(4)")
+            .text()
+            .as_ref()
+            .ends_with(&expected_version_suffix)
+        {
             continue;
         }
 
