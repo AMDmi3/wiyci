@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 3027
+content-length: 3315
 
 <!DOCTYPE html>
 <html lang="en">
@@ -35,13 +35,10 @@ content-length: 3027
 
 
 <header class="jumbotron">
-	<h1>The World Is Your CI</h1>
-	<p>F/OSS projects get packaged in distributions and repositories, <strong>wiyci</strong> collects package build logs from these and presents them in the form of CI builds.</p>
-	<p>This can be useful to <strong>upstreams</strong> (gives an overview of downstream builders, and much wider variety of different build environments than any traditional CI would provide), <strong>contributors</strong> (easy way to find a project which need improvement), <strong>compiler developers</strong> (find cases where warnings are triggered, introduce new warning classes), <strong>platform developers</strong> (to find places to improve specific to their platform of interest).</p>
-	<p><strong>wiyci</strong> is currently in Alpha, so service capabilities are limited. But we're growing!</p>
-	<p><strong>wiyci</strong> currently supports build logs from <strong>Alpine</strong>, <strong>Fedora</strong> and <strong>FreeBSD</strong>. This already covers 2 different kernels, 2 different C libraries, and 8 hardware architectures. <a href="https://github.com/AMDmi3/wiyci/issues/31">Suggest</a> more sources!</p>
-	<p><strong>wiyci</strong> currently parses C/C++ compiler <strong>warnings</strong> and CTest/Google Test/PyTest <strong>test failures</strong>. <a href="https://github.com/AMDmi3/wiyci/issues/14">Suggest</a> more useful facts to parse!</p>
-	<p><strong>wiyci</strong> currently only supports a few dozen most popular projects. <a href="https://github.com/AMDmi3/wiyci/blob/master/wiyci-daemon/src/workers/discover.rs#L10">Suggest</a> a project you're really interested in!</p>
+	<h1>The World Is Your CI (beta)</h1>
+	<p><strong>wiyci</strong> aggregates downstream build logs of Free and Open Source software projects and presents them as a typical Continuous Integration platform would, highlighting compiler warnings and failed tests. We hope to increase upstream awareness of downstream build problems and encourage the community to contribute fixes.</p>
+	<p><strong>wiyci</strong> currently sources build logs from <strong>Alpine</strong>, <strong>Fedora</strong>, <strong>Nix</strong>, and <strong>FreeBSD</strong>, covering a variety of kernels (<strong>Linux</strong>, <strong>FreeBSD</strong>, <strong>Darwin</strong>), system libraries (<strong>glibc</strong>, <strong>musl</strong>, <strong>FreeBSD libc</strong>, <strong>Apple libc</strong>), hardware architectures (<strong>x86_64</strong>, <strong>x86</strong>, <strong>arm</strong>, <strong>aarch64</strong>, <strong>loongarch64</strong>, <strong>ppc64</strong>, <strong>riscv64</strong>, <strong>s390x</strong>), and numerous toolchains.</p>
+	<p>Feel free to suggest more <a href="https://github.com/AMDmi3/wiyci/issues/31">build log sources</a>, more <a href="https://github.com/AMDmi3/wiyci/issues/14">facts to parse</a>, or projects not yet covered that you're interested in.</p>
 </header>
 
 <section>
@@ -49,8 +46,24 @@ content-length: 3027
 
 	<dl class="news">
 		<div class="news__item">
+			<dt><time datetime="2026-08-12">2026-08-12</time></dt>
+			<dd>Nix source added, including Darwin builds</dd>
+		</div>
+		<div class="news__item">
+			<dt><time datetime="2026-08-11">2026-08-11</time></dt>
+			<dd>Coverage increased to ~10k projects</dd>
+		</div>
+		<div class="news__item">
+			<dt><time datetime="2026-08-06">2026-08-06</time></dt>
+			<dd>Added recent problematic builds log</dd>
+		</div>
+		<div class="news__item">
+			<dt><time datetime="2026-08-01">2026-08-01</time></dt>
+			<dd>Problems with domain, temporarily hosting <a href="https://wiyci.repology.org">here</a></dd>
+		</div>
+		<div class="news__item">
 			<dt><time datetime="2026-07-18">2026-07-18</time></dt>
-			<dd>Public launch</dd>
+			<dd>Public launch!</dd>
 		</div>
 	</dl>
 </section>
