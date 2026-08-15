@@ -2,8 +2,7 @@
 
 .news {
 	display: grid;
-	@media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
-    @media (min-width: 1216px) { grid-template-columns: 1fr 1fr 1fr; }
+    @media (min-width: 1408px) { grid-template-columns: 1fr 1fr; }
 	gap: 0 2rem;
 }
 

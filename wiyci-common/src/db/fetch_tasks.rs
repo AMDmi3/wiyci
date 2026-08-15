@@ -47,6 +47,7 @@ pub async fn resolve(
              , last_fetch_attempted_at = now()
              , next_fetch_attempt_at = NULL
              , log_id = $2
+             , last_error = NULL
          WHERE id = $1
     "})
     .bind(id)
