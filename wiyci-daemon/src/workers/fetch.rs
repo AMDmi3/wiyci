@@ -36,6 +36,10 @@ const RETRY_PERIOD_BASE: Duration = Duration::from_days(1);
 const RETRY_PERIOD_MULTIPLIER: f64 = 2.0;
 const RETRY_PERIOD_JITTER: f64 = 0.1;
 
+// Retry table
+// #attempt:  1  2  3  4  5  6  7
+//  t(days):  0  1  3  7 15 31 63 (+10% jitter)
+
 fn calc_retry_interval(num_attempts: u32) -> Option<Duration> {
     // exponentially increasing period starting at RETRY_PERIOD_BASE
     if num_attempts + 1 < MAX_ATTEMPTS {
