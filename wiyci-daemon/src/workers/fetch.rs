@@ -208,7 +208,12 @@ where
                 )
                 .await?;
                 tx.commit().await?;
-                counter!("wiyci_daemon_fetch_logs_total", "status" => "success", "attempt" => (task.num_attempts + 1).to_string()).increment(1);
+                counter!("wiyci_daemon_fetch_logs_total",
+                    "status" => "success",
+                    "attempt" => (task.num_attempts + 1).to_string(),
+                    "kind" => <&'static str>::from(self.kind)
+                )
+                .increment(1);
                 counter!("wiyci_daemon_fetch_bytes_total").increment(new_log.size);
                 histogram!("wiyci_daemon_fetch_log_size_bytes").record(new_log.size as f64);
                 gauge!("wiyci_daemon_statistics_stored_logs_size_bytes")
@@ -227,7 +232,12 @@ where
                     calc_retry_interval(task.num_attempts),
                 )
                 .await?;
-                counter!("wiyci_daemon_fetch_logs_total", "status" => "reject", "attempt" => (task.num_attempts + 1).to_string()).increment(1);
+                counter!("wiyci_daemon_fetch_logs_total",
+                    "status" => "reject",
+                    "attempt" => (task.num_attempts + 1).to_string(),
+                    "kind" => <&'static str>::from(self.kind)
+                )
+                .increment(1);
                 warn!(%reject, "log fetch failed");
             }
         }

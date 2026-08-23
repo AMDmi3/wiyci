@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use time::OffsetDateTime;
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, sqlx::Type)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, sqlx::Type, strum::IntoStaticStr)]
 #[sqlx(type_name = "text")]
 #[non_exhaustive]
 pub enum FetchTaskKind {
