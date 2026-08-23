@@ -7,7 +7,7 @@ content-type: text/html; charset=utf-8
 x-content-type-options: nosniff
 content-security-policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
 x-frame-options: DENY
-content-length: 3315
+content-length: 3442
 
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +46,10 @@ content-length: 3315
 
 	<dl class="news">
 		<div class="news__item">
+			<dt><time datetime="2026-08-22">2026-08-22</time></dt>
+			<dd>Domain issues resolved</dd>
+		</div>
+		<div class="news__item">
 			<dt><time datetime="2026-08-12">2026-08-12</time></dt>
 			<dd>Nix source added, including Darwin builds</dd>
 		</div>
@@ -59,7 +63,7 @@ content-length: 3315
 		</div>
 		<div class="news__item">
 			<dt><time datetime="2026-08-01">2026-08-01</time></dt>
-			<dd>Problems with domain, temporarily hosting <a href="https://wiyci.repology.org">here</a></dd>
+			<dd>Issues with domain, temporarily hosting <a href="https://wiyci.repology.org">here</a></dd>
 		</div>
 		<div class="news__item">
 			<dt><time datetime="2026-07-18">2026-07-18</time></dt>
