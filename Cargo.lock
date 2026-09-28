@@ -4583,7 +4583,6 @@ dependencies = [
  "strum",
  "time",
  "uuid",
- "wiyci-parser",
  "xxhash-rust",
 ]
 
@@ -4672,7 +4671,6 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "wiyci-common",
- "wiyci-parser",
 ]
 
 [[package]]
