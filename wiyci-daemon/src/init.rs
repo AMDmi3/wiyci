@@ -129,12 +129,14 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
         info!("initializing prometheus exporter");
         use metrics_exporter_prometheus::{Matcher, PrometheusBuilder};
 
-        const MILLI_TO_10MIN_SECONDS_BUCKETS: &[f64] = &[
+        const TASK_DURATION_SECONDS_BUCKETS: &[f64] = &[
             0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 20.0,
-            40.0, 60.0, 90.0, 120.0, 180.0, 300.0, 600.0,
+            30.0, 60.0,
         ];
 
-        const MINUTE_TO_YEAR_SECONDS_BUCKETS: &[f64] = &[
+        const TASK_OVERDUE_SECONDS_BUCKETS: &[f64] = &[
+            15.0,
+            30.0,
             60.0,
             120.0,
             300.0,
@@ -148,12 +150,6 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
             2.0 * 86400.0,
             4.0 * 86400.0,
             7.0 * 86400.0,
-            14.0 * 86400.0,
-            30.0 * 86400.0,
-            61.0 * 86400.0,
-            120.0 * 86400.0,
-            183.0 * 86400.0,
-            366.0 * 86400.0,
         ];
 
         // 1k ..= 16M; current log size limit is 10M
@@ -162,12 +158,12 @@ pub fn init_metrics(config: &Config) -> anyhow::Result<()> {
         PrometheusBuilder::new()
             .set_buckets_for_metric(
                 Matcher::Suffix("_duration_seconds".to_string()),
-                MILLI_TO_10MIN_SECONDS_BUCKETS,
+                TASK_DURATION_SECONDS_BUCKETS,
             )
             .unwrap()
             .set_buckets_for_metric(
                 Matcher::Suffix("_overdue_age_seconds".to_string()),
-                MINUTE_TO_YEAR_SECONDS_BUCKETS,
+                TASK_OVERDUE_SECONDS_BUCKETS,
             )
             .unwrap()
             .set_buckets_for_metric(
