@@ -13,12 +13,12 @@ struct BuilderInfo {
 
 const BUILDERS: &[BuilderInfo] = &[
     BuilderInfo {
-        variant: "150amd64",
-        url: "https://pkg-status.freebsd.org/beefy23/data/latest-per-pkg/{binname}/{version}/150amd64-default.log",
+        variant: "151amd64",
+        url: "https://pkg-status.freebsd.org/beefy23/data/latest-per-pkg/{binname}/{version}/151amd64-default.log",
     },
     BuilderInfo {
-        variant: "150arm64",
-        url: "https://pkg-status.freebsd.org/ampere5/data/latest-per-pkg/{binname}/{version}/150arm64-default.log",
+        variant: "151arm64",
+        url: "https://pkg-status.freebsd.org/ampere5/data/latest-per-pkg/{binname}/{version}/151arm64-default.log",
     },
 ];
 
